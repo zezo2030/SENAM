@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>SENAM - System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    color: #fff;
+    padding: 40px 20px;
+    line-height: 1.7;
+  }
+  .container { max-width: 1600px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    background: linear-gradient(135deg, #d4af37, #b8941f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
+  .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 18px; }
+  hr { border: 1px solid #d4af37; margin: 30px 0; }
+  h2 {
+    color: #d4af37;
+    font-size: 28px;
+    margin: 40px 0 20px;
+    padding-right: 15px;
+    border-right: 4px solid #d4af37;
+  }
+  h3 { color: #fff; margin: 20px 0 10px; font-size: 20px; }
+  .diagram-wrapper {
+    background: #111;
+    border: 2px solid #d4af37;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 30px 0;
+    overflow-x: auto;
+  }
+  .diagram-wrapper svg { width: 100%; height: auto; display: block; }
+  .layer {
+    background: linear-gradient(135deg, rgba(212,175,55,0.05), rgba(212,175,55,0.02));
+    border: 1px solid #333;
+    border-right: 4px solid #d4af37;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+  }
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+  }
+  .card-title { color: #d4af37; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
+  .card ul { list-style: none; padding: 0; }
+  .card li { padding: 4px 0; color: #ccc; font-size: 13px; }
+  .card li::before { content: "◆ "; color: #d4af37; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: #111;
+  }
+  th, td { padding: 12px; border: 1px solid #333; text-align: right; }
+  th { background: #d4af37; color: #000; }
+  td { color: #ddd; }
+  .flow-box {
+    background: #1a1a1a;
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    text-align: center;
+    color: #fff;
+  }
+  .flow-arrow { text-align: center; color: #d4af37; font-size: 24px; margin: 5px 0; }
+  .tag {
+    display: inline-block;
+    background: #d4af37;
+    color: #000;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  .footer {
+    text-align: center;
+    color: #666;
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>SENAM — System Architecture</h1>
+  <p class="subtitle">منصة الخدمات الموثوقة | Service Marketplace Platform Architecture</p>
+  <hr>
+
+  <h2>المخطط المعماري الشامل</h2>
+  <div class="diagram-wrapper">
+    <object data="SENAM_Architecture.svg" type="image/svg+xml" style="width:100%; min-height:1800px;"></object>
+  </div>
+
+  <hr>
+
+  <h2>1. شرح الطبقات (Layer-by-Layer Breakdown)</h2>
+
+  <div class="layer">
+    <h3>الطبقة الأولى: Client Layer (واجهات المستخدم)</h3>
+    <p>الطبقة المرئية اللي بيتعامل معاها المستخدمين النهائيين. كل واجهة مخصصة لنوع مستخدم.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Customer App (Flutter)</div>
+        <ul>
+          <li>iOS + Android من Codebase واحد</li>
+          <li>State Management: Riverpod</li>
+          <li>HTTP Client: Dio + Interceptors</li>
+          <li>Real-time: socket_io_client</li>
+          <li>Offline Cache: Hive</li>
+          <li>دعم RTL كامل + Dark Mode</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Admin Dashboard (React)</div>
+        <ul>
+          <li>Next.js 14 + TypeScript</li>
+          <li>TailwindCSS + shadcn/ui</li>
+          <li>React Query للـ Data Fetching</li>
+          <li>Recharts للرسوم البيانية</li>
+          <li>نظام RBAC للصلاحيات</li>
+          <li>2FA إجباري</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Provider Dashboard (React)</div>
+        <ul>
+          <li>Web Responsive (يعمل على الجوال)</li>
+          <li>PWA Support للوصول السريع</li>
+          <li>إشعارات صوتية للطلبات الجديدة</li>
+          <li>Calendar للجدولة</li>
+          <li>تقارير مالية أسبوعية</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <h3>الطبقة الثانية: Edge &amp; Security Layer (الحماية والتوزيع)</h3>
+    <p>طبقة الحماية الأولى — تستقبل كل الطلبات وتفلترها قبل وصولها للـ Backend.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Cloudflare CDN</div>
+        <ul>
+          <li>توزيع المحتوى الجغرافي</li>
+          <li>DDoS Protection</li>
+          <li>WAF (Web App Firewall)</li>
+          <li>SSL/TLS Termination</li>
+          <li>Bot Mitigation</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">API Gateway (Nginx)</div>
+        <ul>
+          <li>Reverse Proxy + Load Balancer</li>
+          <li>Rate Limiting (100 req/min/user)</li>
+          <li>Request Routing</li>
+          <li>Response Caching</li>
+          <li>API Versioning Support</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Auth Service</div>
+        <ul>
+          <li>JWT Token Generation</li>
+          <li>Refresh Token Rotation</li>
+          <li>RBAC Permission Check</li>
+          <li>OTP Validation</li>
+          <li>Session Management (Redis)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <h3>الطبقة الثالثة: Backend Services (الخدمات الخلفية)</h3>
+    <p>القلب النابض للنظام. <strong>Modular Monolith</strong> في البداية باستخدام NestJS، قابلة للتحول لـ Microservices مستقلة عند الحاجة.</p>
+    <table>
+      <tr>
+        <th>الخدمة</th>
+        <th>المسؤولية</th>
+        <th>Endpoints الرئيسية</th>
+      </tr>
+      <tr>
+        <td><strong>User Service</strong></td>
+        <td>إدارة بيانات المستخدمين، العناوين، المفضلة</td>
+        <td>/users, /addresses, /favorites</td>
+      </tr>
+      <tr>
+        <td><strong>Company Service</strong></td>
+        <td>إدارة الشركات وتفاصيلها وخدماتها</td>
+        <td>/companies, /companies/:id/services</td>
+      </tr>
+      <tr>
+        <td><strong>Booking Service</strong></td>
+        <td>المحرك الرئيسي للحجوزات وإدارة دورة حياة الطلب</td>
+        <td>/bookings, /bookings/:id/status</td>
+      </tr>
+      <tr>
+        <td><strong>Payment Service</strong></td>
+        <td>التكامل مع بوابات الدفع وإدارة المحفظة</td>
+        <td>/payments, /wallet, /refunds</td>
+      </tr>
+      <tr>
+        <td><strong>Notification Service</strong></td>
+        <td>إرسال الإشعارات عبر القنوات المختلفة</td>
+        <td>/notifications, /devices/register</td>
+      </tr>
+      <tr>
+        <td><strong>Review Service</strong></td>
+        <td>التقييمات والمراجعات</td>
+        <td>/reviews, /reviews/:id/reply</td>
+      </tr>
+      <tr>
+        <td><strong>Catalog Service</strong></td>
+        <td>الفئات والخدمات والبحث</td>
+        <td>/categories, /services, /search</td>
+      </tr>
+      <tr>
+        <td><strong>Coupon Service</strong></td>
+        <td>الكوبونات والعروض</td>
+        <td>/coupons/apply, /coupons/validate</td>
+      </tr>
+      <tr>
+        <td><strong>Location Service</strong></td>
+        <td>الخرائط والمواقع وحساب المسافات</td>
+        <td>/locations/nearby, /geocode</td>
+      </tr>
+      <tr>
+        <td><strong>Tracking Service</strong></td>
+        <td>التتبع المباشر للفنيين (WebSocket)</td>
+        <td>WSS /tracking/:orderId</td>
+      </tr>
+      <tr>
+        <td><strong>Analytics Service</strong></td>
+        <td>التقارير والإحصائيات</td>
+        <td>/analytics/dashboard, /reports</td>
+      </tr>
+      <tr>
+        <td><strong>Admin Service</strong></td>
+        <td>كل عمليات لوحة الإدارة</td>
+        <td>/admin/*</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="layer">
+    <h3>الطبقة الرابعة: Data Layer (طبقة البيانات)</h3>
+    <p>تخزين البيانات بأنواعها المختلفة. كل نوع بيانات يُخزن في الـ Store المناسب لطبيعته.</p>
+    <table>
+      <tr>
+        <th>التخزين</th>
+        <th>الاستخدام</th>
+        <th>ملاحظات</th>
+      </tr>
+      <tr>
+        <td><strong>PostgreSQL 15+</strong></td>
+        <td>البيانات الأساسية (Users, Orders, Companies, Payments)</td>
+        <td>Master-Replica + Daily Backups</td>
+      </tr>
+      <tr>
+        <td><strong>Redis</strong></td>
+        <td>Cache + Sessions + Rate Limiting + Pub/Sub</td>
+        <td>Cluster Mode للـ HA</td>
+      </tr>
+      <tr>
+        <td><strong>Elasticsearch</strong></td>
+        <td>البحث النصي + الـ Geo-spatial + الـ Logs</td>
+        <td>3 Nodes Cluster</td>
+      </tr>
+      <tr>
+        <td><strong>S3 / Cloudflare R2</strong></td>
+        <td>الصور والمستندات والفواتير</td>
+        <td>Lifecycle Policy للأرشفة</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="layer">
+    <h3>الطبقة الخامسة: Third-Party Integrations (التكامل الخارجي)</h3>
+    <p>الخدمات الخارجية اللي بتربط SENAM بمنظومة أوسع.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">المدفوعات</div>
+        <ul>
+          <li>MyFatoorah (Primary)</li>
+          <li>Tap Payments (Fallback)</li>
+          <li>Apple Pay / Google Pay</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">المصادقة والإشعارات</div>
+        <ul>
+          <li>Firebase Auth (OTP)</li>
+          <li>Firebase Cloud Messaging</li>
+          <li>Twilio SMS (Backup)</li>
+          <li>SendGrid Email</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">الخرائط والمواقع</div>
+        <ul>
+          <li>Google Maps Platform</li>
+          <li>Places API</li>
+          <li>Directions API</li>
+          <li>Geocoding API</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">التحليلات والمراقبة</div>
+        <ul>
+          <li>Mixpanel (User Analytics)</li>
+          <li>AppsFlyer (Attribution)</li>
+          <li>Sentry (Error Tracking)</li>
+          <li>Datadog (APM)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">الدعم والمحاسبة</div>
+        <ul>
+          <li>Intercom (Customer Support)</li>
+          <li>Zoho Books (Accounting)</li>
+          <li>Slack (Internal Alerts)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>2. تدفق طلب نموذجي (Sample Order Flow)</h2>
+  <p>هذا مثال على كيفية تدفق طلب غسيل سيارات من الإنشاء حتى الإكمال:</p>
+
+  <div class="flow-box">📱 العميل يفتح التطبيق ويختار "غسيل سيارات"</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">🌐 Request → Cloudflare → API Gateway → Auth Service (يتحقق من JWT)</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">🔍 Catalog Service يرجع قائمة الشركات + Location Service يحسب المسافة</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">📝 العميل يختار شركة ويحجز → Booking Service ينشئ الطلب (Status: Pending)</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">💳 Payment Service يحجز المبلغ من البطاقة (Pre-authorization)</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">🔔 Notification Service → Push Notification للشركة عبر FCM</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">🏢 Provider Dashboard يستلم الطلب → الشركة تقبل (خلال 5 دقائق)</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">🚗 الفني يبدأ التوجه → Tracking Service يبث الموقع عبر WebSocket</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">📲 العميل يرى الموقع المباشر + ETA على الخريطة</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">✅ الفني يكمل الخدمة → Status: Completed</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">💰 Payment Service يقبض المبلغ + يحسب العمولة + يضيف للتسوية الأسبوعية</div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-box">⭐ Review Service يدعو العميل للتقييم</div>
+
+  <hr>
+
+  <h2>3. اعتبارات قابلية التوسع (Scalability)</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">المرحلة 1: 0-10K MAU</div>
+      <ul>
+        <li>Single EC2 Instance + RDS Small</li>
+        <li>Modular Monolith</li>
+        <li>Single Region (الدوحة)</li>
+        <li>التكلفة الشهرية ~$800</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">المرحلة 2: 10K-50K MAU</div>
+      <ul>
+        <li>Auto-scaling Group + Load Balancer</li>
+        <li>RDS Read Replicas</li>
+        <li>Redis Cluster Mode</li>
+        <li>CDN Caching Strategy</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">المرحلة 3: 50K+ MAU</div>
+      <ul>
+        <li>Split into Microservices</li>
+        <li>Kubernetes (EKS)</li>
+        <li>Multi-region Deployment</li>
+        <li>Database Sharding</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>4. توصيات أمنية حرجة</h2>
+  <ul style="padding-right: 30px; color: #ddd;">
+    <li style="margin: 8px 0;">📌 تشفير كل الـ Endpoints بـ HTTPS / TLS 1.3</li>
+    <li style="margin: 8px 0;">📌 تخزين كلمات السر بـ Bcrypt (cost factor 12+)</li>
+    <li style="margin: 8px 0;">📌 OTP صالحة لـ 5 دقائق فقط ومرة واحدة</li>
+    <li style="margin: 8px 0;">📌 JWT Access Token صلاحية 15 دقيقة + Refresh Token 30 يوم</li>
+    <li style="margin: 8px 0;">📌 لا تخزن بيانات البطاقات أبداً — كلها تمر عبر Payment Gateway</li>
+    <li style="margin: 8px 0;">📌 Rate Limiting صارم: 5 OTP/ساعة لكل رقم، 100 req/min للـ API</li>
+    <li style="margin: 8px 0;">📌 Audit Logs لكل عمليات لوحة الإدارة الحساسة</li>
+    <li style="margin: 8px 0;">📌 PCI-DSS Compliance للمدفوعات</li>
+    <li style="margin: 8px 0;">📌 GDPR / قانون حماية البيانات القطري للخصوصية</li>
+    <li style="margin: 8px 0;">📌 Penetration Testing سنوي من جهة خارجية</li>
+  </ul>
+
+  <div class="footer">
+    <p>© 2026 SENAM | Architecture Diagram v1.0 | تم الإعداد بواسطة فريق المنتج</p>
+  </div>
+</div>
+</body>
+</html>

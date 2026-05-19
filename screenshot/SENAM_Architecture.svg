@@ -1,0 +1,457 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2000" font-family="Segoe UI, Tahoma, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4af37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8941f;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a2a2a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f1f3a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d5016;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a2f0a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="thirdPartyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c2d2d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3a1a1a;stop-opacity:1" />
+    </linearGradient>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#d4af37" />
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4a90e2" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="2000" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="800" y="50" text-anchor="middle" fill="url(#goldGrad)" font-size="36" font-weight="bold">SENAM - System Architecture Diagram</text>
+  <text x="800" y="80" text-anchor="middle" fill="#888" font-size="16">منصة الخدمات الموثوقة | Service Marketplace Platform</text>
+  <line x1="200" y1="100" x2="1400" y2="100" stroke="url(#goldGrad)" stroke-width="2"/>
+
+  <!-- ========== CLIENT LAYER ========== -->
+  <text x="80" y="150" fill="#d4af37" font-size="22" font-weight="bold">1. CLIENT LAYER (طبقة المستخدمين)</text>
+  <rect x="80" y="170" width="1440" height="240" rx="10" fill="url(#clientGrad)" stroke="#d4af37" stroke-width="2"/>
+
+  <!-- Customer App -->
+  <g>
+    <rect x="120" y="200" width="280" height="180" rx="8" fill="#2a2a2a" stroke="#d4af37" stroke-width="1.5"/>
+    <text x="260" y="230" text-anchor="middle" fill="#d4af37" font-size="18" font-weight="bold">Customer Mobile App</text>
+    <text x="260" y="250" text-anchor="middle" fill="#fff" font-size="12">تطبيق العميل</text>
+    <line x1="140" y1="265" x2="380" y2="265" stroke="#444" stroke-width="1"/>
+    <text x="140" y="285" fill="#ccc" font-size="13">• Flutter 3.x (Dart)</text>
+    <text x="140" y="305" fill="#ccc" font-size="13">• iOS 13+ / Android 8+</text>
+    <text x="140" y="325" fill="#ccc" font-size="13">• Riverpod (State Mgmt)</text>
+    <text x="140" y="345" fill="#ccc" font-size="13">• Dio (HTTP) + Socket.io</text>
+    <text x="140" y="365" fill="#ccc" font-size="13">• RTL Arabic + Dark Theme</text>
+  </g>
+
+  <!-- Admin Dashboard -->
+  <g>
+    <rect x="440" y="200" width="280" height="180" rx="8" fill="#2a2a2a" stroke="#d4af37" stroke-width="1.5"/>
+    <text x="580" y="230" text-anchor="middle" fill="#d4af37" font-size="18" font-weight="bold">Admin Dashboard</text>
+    <text x="580" y="250" text-anchor="middle" fill="#fff" font-size="12">لوحة تحكم الإدارة</text>
+    <line x1="460" y1="265" x2="700" y2="265" stroke="#444" stroke-width="1"/>
+    <text x="460" y="285" fill="#ccc" font-size="13">• React.js / Next.js 14</text>
+    <text x="460" y="305" fill="#ccc" font-size="13">• TailwindCSS + shadcn/ui</text>
+    <text x="460" y="325" fill="#ccc" font-size="13">• Recharts (Analytics)</text>
+    <text x="460" y="345" fill="#ccc" font-size="13">• RBAC (Roles)</text>
+    <text x="460" y="365" fill="#ccc" font-size="13">• 2FA Authentication</text>
+  </g>
+
+  <!-- Provider Dashboard -->
+  <g>
+    <rect x="760" y="200" width="280" height="180" rx="8" fill="#2a2a2a" stroke="#d4af37" stroke-width="1.5"/>
+    <text x="900" y="230" text-anchor="middle" fill="#d4af37" font-size="18" font-weight="bold">Provider Dashboard</text>
+    <text x="900" y="250" text-anchor="middle" fill="#fff" font-size="12">لوحة الشركات</text>
+    <line x1="780" y1="265" x2="1020" y2="265" stroke="#444" stroke-width="1"/>
+    <text x="780" y="285" fill="#ccc" font-size="13">• React.js (Responsive)</text>
+    <text x="780" y="305" fill="#ccc" font-size="13">• PWA Support</text>
+    <text x="780" y="325" fill="#ccc" font-size="13">• Real-time Orders</text>
+    <text x="780" y="345" fill="#ccc" font-size="13">• Calendar + Scheduling</text>
+    <text x="780" y="365" fill="#ccc" font-size="13">• Financial Reports</text>
+  </g>
+
+  <!-- Landing Website -->
+  <g>
+    <rect x="1080" y="200" width="280" height="180" rx="8" fill="#2a2a2a" stroke="#d4af37" stroke-width="1.5"/>
+    <text x="1220" y="230" text-anchor="middle" fill="#d4af37" font-size="18" font-weight="bold">Landing Website</text>
+    <text x="1220" y="250" text-anchor="middle" fill="#fff" font-size="12">الموقع التعريفي</text>
+    <line x1="1100" y1="265" x2="1340" y2="265" stroke="#444" stroke-width="1"/>
+    <text x="1100" y="285" fill="#ccc" font-size="13">• Next.js (SSR/SSG)</text>
+    <text x="1100" y="305" fill="#ccc" font-size="13">• SEO Optimized</text>
+    <text x="1100" y="325" fill="#ccc" font-size="13">• Multi-language</text>
+    <text x="1100" y="345" fill="#ccc" font-size="13">• Marketing + Blog</text>
+    <text x="1100" y="365" fill="#ccc" font-size="13">• App Store Links</text>
+  </g>
+
+  <!-- ========== CDN / EDGE LAYER ========== -->
+  <text x="80" y="460" fill="#d4af37" font-size="22" font-weight="bold">2. EDGE &amp; SECURITY LAYER (طبقة الحماية والتوزيع)</text>
+  <rect x="80" y="480" width="1440" height="120" rx="10" fill="#1a1a2e" stroke="#d4af37" stroke-width="2"/>
+
+  <g>
+    <rect x="140" y="500" width="280" height="80" rx="8" fill="#2a1a3e" stroke="#9b59b6" stroke-width="1.5"/>
+    <text x="280" y="525" text-anchor="middle" fill="#9b59b6" font-size="16" font-weight="bold">Cloudflare CDN</text>
+    <text x="280" y="545" text-anchor="middle" fill="#ccc" font-size="12">DDoS Protection + WAF</text>
+    <text x="280" y="565" text-anchor="middle" fill="#ccc" font-size="12">Edge Caching + SSL/TLS</text>
+  </g>
+  <g>
+    <rect x="460" y="500" width="280" height="80" rx="8" fill="#2a1a3e" stroke="#9b59b6" stroke-width="1.5"/>
+    <text x="600" y="525" text-anchor="middle" fill="#9b59b6" font-size="16" font-weight="bold">API Gateway (Nginx)</text>
+    <text x="600" y="545" text-anchor="middle" fill="#ccc" font-size="12">Load Balancing + Rate Limiting</text>
+    <text x="600" y="565" text-anchor="middle" fill="#ccc" font-size="12">Reverse Proxy + SSL</text>
+  </g>
+  <g>
+    <rect x="780" y="500" width="280" height="80" rx="8" fill="#2a1a3e" stroke="#9b59b6" stroke-width="1.5"/>
+    <text x="920" y="525" text-anchor="middle" fill="#9b59b6" font-size="16" font-weight="bold">Auth Service (JWT)</text>
+    <text x="920" y="545" text-anchor="middle" fill="#ccc" font-size="12">Token Validation + Refresh</text>
+    <text x="920" y="565" text-anchor="middle" fill="#ccc" font-size="12">RBAC Permissions</text>
+  </g>
+  <g>
+    <rect x="1100" y="500" width="280" height="80" rx="8" fill="#2a1a3e" stroke="#9b59b6" stroke-width="1.5"/>
+    <text x="1240" y="525" text-anchor="middle" fill="#9b59b6" font-size="16" font-weight="bold">WebSocket Gateway</text>
+    <text x="1240" y="545" text-anchor="middle" fill="#ccc" font-size="12">Real-time Order Tracking</text>
+    <text x="1240" y="565" text-anchor="middle" fill="#ccc" font-size="12">Live Notifications</text>
+  </g>
+
+  <!-- ========== BACKEND MICROSERVICES ========== -->
+  <text x="80" y="650" fill="#d4af37" font-size="22" font-weight="bold">3. BACKEND SERVICES LAYER (طبقة الخدمات الخلفية)</text>
+  <rect x="80" y="670" width="1440" height="400" rx="10" fill="url(#backendGrad)" stroke="#4a90e2" stroke-width="2"/>
+  <text x="800" y="700" text-anchor="middle" fill="#aaa" font-size="14">Node.js (NestJS) - Modular Monolith → قابل للتحول لـ Microservices لاحقاً</text>
+
+  <!-- Service Boxes -->
+  <g>
+    <rect x="120" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="220" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">User Service</text>
+    <text x="220" y="770" text-anchor="middle" fill="#ccc" font-size="11">Profile, Addresses</text>
+    <text x="220" y="788" text-anchor="middle" fill="#ccc" font-size="11">Favorites, Settings</text>
+    <text x="220" y="806" text-anchor="middle" fill="#ccc" font-size="11">OTP Verification</text>
+  </g>
+  <g>
+    <rect x="340" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="440" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Company Service</text>
+    <text x="440" y="770" text-anchor="middle" fill="#ccc" font-size="11">KYC Onboarding</text>
+    <text x="440" y="788" text-anchor="middle" fill="#ccc" font-size="11">Services + Pricing</text>
+    <text x="440" y="806" text-anchor="middle" fill="#ccc" font-size="11">Availability</text>
+  </g>
+  <g>
+    <rect x="560" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="660" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Booking Service</text>
+    <text x="660" y="770" text-anchor="middle" fill="#ccc" font-size="11">Create / Cancel</text>
+    <text x="660" y="788" text-anchor="middle" fill="#ccc" font-size="11">Status Workflow</text>
+    <text x="660" y="806" text-anchor="middle" fill="#ccc" font-size="11">Auto-dispatch</text>
+  </g>
+  <g>
+    <rect x="780" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="880" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Payment Service</text>
+    <text x="880" y="770" text-anchor="middle" fill="#ccc" font-size="11">Charge / Refund</text>
+    <text x="880" y="788" text-anchor="middle" fill="#ccc" font-size="11">Wallet + Settlement</text>
+    <text x="880" y="806" text-anchor="middle" fill="#ccc" font-size="11">Invoice Generation</text>
+  </g>
+  <g>
+    <rect x="1000" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="1100" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Notification Service</text>
+    <text x="1100" y="770" text-anchor="middle" fill="#ccc" font-size="11">Push (FCM)</text>
+    <text x="1100" y="788" text-anchor="middle" fill="#ccc" font-size="11">SMS + Email</text>
+    <text x="1100" y="806" text-anchor="middle" fill="#ccc" font-size="11">In-app Inbox</text>
+  </g>
+  <g>
+    <rect x="1220" y="720" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="1320" y="745" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Review Service</text>
+    <text x="1320" y="770" text-anchor="middle" fill="#ccc" font-size="11">Rating + Comments</text>
+    <text x="1320" y="788" text-anchor="middle" fill="#ccc" font-size="11">Moderation</text>
+    <text x="1320" y="806" text-anchor="middle" fill="#ccc" font-size="11">Company Replies</text>
+  </g>
+
+  <g>
+    <rect x="120" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="220" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Catalog Service</text>
+    <text x="220" y="890" text-anchor="middle" fill="#ccc" font-size="11">Categories + Services</text>
+    <text x="220" y="908" text-anchor="middle" fill="#ccc" font-size="11">Search + Filters</text>
+    <text x="220" y="926" text-anchor="middle" fill="#ccc" font-size="11">Recommendations</text>
+  </g>
+  <g>
+    <rect x="340" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="440" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Coupon Service</text>
+    <text x="440" y="890" text-anchor="middle" fill="#ccc" font-size="11">Promo Codes</text>
+    <text x="440" y="908" text-anchor="middle" fill="#ccc" font-size="11">Campaigns</text>
+    <text x="440" y="926" text-anchor="middle" fill="#ccc" font-size="11">Usage Tracking</text>
+  </g>
+  <g>
+    <rect x="560" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="660" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Location Service</text>
+    <text x="660" y="890" text-anchor="middle" fill="#ccc" font-size="11">Geocoding</text>
+    <text x="660" y="908" text-anchor="middle" fill="#ccc" font-size="11">Route Optimization</text>
+    <text x="660" y="926" text-anchor="middle" fill="#ccc" font-size="11">Nearby Search</text>
+  </g>
+  <g>
+    <rect x="780" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="880" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Tracking Service</text>
+    <text x="880" y="890" text-anchor="middle" fill="#ccc" font-size="11">Live Location</text>
+    <text x="880" y="908" text-anchor="middle" fill="#ccc" font-size="11">Status Updates</text>
+    <text x="880" y="926" text-anchor="middle" fill="#ccc" font-size="11">ETA Calculation</text>
+  </g>
+  <g>
+    <rect x="1000" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="1100" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Analytics Service</text>
+    <text x="1100" y="890" text-anchor="middle" fill="#ccc" font-size="11">Reports + KPIs</text>
+    <text x="1100" y="908" text-anchor="middle" fill="#ccc" font-size="11">Dashboards</text>
+    <text x="1100" y="926" text-anchor="middle" fill="#ccc" font-size="11">Export Excel/PDF</text>
+  </g>
+  <g>
+    <rect x="1220" y="840" width="200" height="100" rx="8" fill="#1a2f4f" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="1320" y="865" text-anchor="middle" fill="#4a90e2" font-size="15" font-weight="bold">Admin Service</text>
+    <text x="1320" y="890" text-anchor="middle" fill="#ccc" font-size="11">User Management</text>
+    <text x="1320" y="908" text-anchor="middle" fill="#ccc" font-size="11">Commission Control</text>
+    <text x="1320" y="926" text-anchor="middle" fill="#ccc" font-size="11">Disputes</text>
+  </g>
+
+  <!-- Queue and Background Jobs -->
+  <g>
+    <rect x="120" y="960" width="640" height="90" rx="8" fill="#3a1f4f" stroke="#bb86fc" stroke-width="1.5"/>
+    <text x="440" y="985" text-anchor="middle" fill="#bb86fc" font-size="16" font-weight="bold">Message Queue (RabbitMQ / Redis Bull)</text>
+    <text x="440" y="1010" text-anchor="middle" fill="#ccc" font-size="12">Async Jobs: Notifications, Emails, Reports Generation, Settlement Processing</text>
+    <text x="440" y="1030" text-anchor="middle" fill="#ccc" font-size="12">Order Auto-dispatch | Refund Processing | Webhook Handlers</text>
+  </g>
+  <g>
+    <rect x="780" y="960" width="640" height="90" rx="8" fill="#3a1f4f" stroke="#bb86fc" stroke-width="1.5"/>
+    <text x="1100" y="985" text-anchor="middle" fill="#bb86fc" font-size="16" font-weight="bold">Cron Jobs &amp; Schedulers</text>
+    <text x="1100" y="1010" text-anchor="middle" fill="#ccc" font-size="12">Weekly Settlements | Daily Reports | Auto-cancel Stale Orders</text>
+    <text x="1100" y="1030" text-anchor="middle" fill="#ccc" font-size="12">Cleanup Tasks | Analytics Aggregation | Commission Calculation</text>
+  </g>
+
+  <!-- ========== DATA LAYER ========== -->
+  <text x="80" y="1110" fill="#d4af37" font-size="22" font-weight="bold">4. DATA LAYER (طبقة البيانات)</text>
+  <rect x="80" y="1130" width="1440" height="240" rx="10" fill="url(#dbGrad)" stroke="#27ae60" stroke-width="2"/>
+
+  <g>
+    <rect x="120" y="1160" width="280" height="190" rx="8" fill="#1a3a1a" stroke="#27ae60" stroke-width="1.5"/>
+    <text x="260" y="1190" text-anchor="middle" fill="#27ae60" font-size="17" font-weight="bold">PostgreSQL 15+</text>
+    <text x="260" y="1212" text-anchor="middle" fill="#fff" font-size="12">Primary Database</text>
+    <line x1="140" y1="1225" x2="380" y2="1225" stroke="#444" stroke-width="1"/>
+    <text x="140" y="1245" fill="#ccc" font-size="12">• Users + Companies</text>
+    <text x="140" y="1265" fill="#ccc" font-size="12">• Orders + Payments</text>
+    <text x="140" y="1285" fill="#ccc" font-size="12">• Services + Categories</text>
+    <text x="140" y="1305" fill="#ccc" font-size="12">• Reviews + Coupons</text>
+    <text x="140" y="1325" fill="#ccc" font-size="12">• Master-Replica Setup</text>
+  </g>
+  <g>
+    <rect x="420" y="1160" width="280" height="190" rx="8" fill="#1a3a1a" stroke="#27ae60" stroke-width="1.5"/>
+    <text x="560" y="1190" text-anchor="middle" fill="#27ae60" font-size="17" font-weight="bold">Redis</text>
+    <text x="560" y="1212" text-anchor="middle" fill="#fff" font-size="12">Cache + Sessions</text>
+    <line x1="440" y1="1225" x2="680" y2="1225" stroke="#444" stroke-width="1"/>
+    <text x="440" y="1245" fill="#ccc" font-size="12">• Session Storage</text>
+    <text x="440" y="1265" fill="#ccc" font-size="12">• API Response Cache</text>
+    <text x="440" y="1285" fill="#ccc" font-size="12">• Rate Limiting Counters</text>
+    <text x="440" y="1305" fill="#ccc" font-size="12">• Queue Backend</text>
+    <text x="440" y="1325" fill="#ccc" font-size="12">• Real-time Pub/Sub</text>
+  </g>
+  <g>
+    <rect x="720" y="1160" width="280" height="190" rx="8" fill="#1a3a1a" stroke="#27ae60" stroke-width="1.5"/>
+    <text x="860" y="1190" text-anchor="middle" fill="#27ae60" font-size="17" font-weight="bold">Elasticsearch</text>
+    <text x="860" y="1212" text-anchor="middle" fill="#fff" font-size="12">Search + Analytics</text>
+    <line x1="740" y1="1225" x2="980" y2="1225" stroke="#444" stroke-width="1"/>
+    <text x="740" y="1245" fill="#ccc" font-size="12">• Full-text Search</text>
+    <text x="740" y="1265" fill="#ccc" font-size="12">• Geo-spatial Queries</text>
+    <text x="740" y="1285" fill="#ccc" font-size="12">• Logs Aggregation</text>
+    <text x="740" y="1305" fill="#ccc" font-size="12">• Activity Tracking</text>
+    <text x="740" y="1325" fill="#ccc" font-size="12">• Audit Trails</text>
+  </g>
+  <g>
+    <rect x="1020" y="1160" width="280" height="190" rx="8" fill="#1a3a1a" stroke="#27ae60" stroke-width="1.5"/>
+    <text x="1160" y="1190" text-anchor="middle" fill="#27ae60" font-size="17" font-weight="bold">S3 / R2 Storage</text>
+    <text x="1160" y="1212" text-anchor="middle" fill="#fff" font-size="12">File Storage</text>
+    <line x1="1040" y1="1225" x2="1280" y2="1225" stroke="#444" stroke-width="1"/>
+    <text x="1040" y="1245" fill="#ccc" font-size="12">• Company Images</text>
+    <text x="1040" y="1265" fill="#ccc" font-size="12">• Review Photos</text>
+    <text x="1040" y="1285" fill="#ccc" font-size="12">• KYC Documents</text>
+    <text x="1040" y="1305" fill="#ccc" font-size="12">• Invoices PDF</text>
+    <text x="1040" y="1325" fill="#ccc" font-size="12">• Backups</text>
+  </g>
+
+  <!-- Backup -->
+  <g>
+    <rect x="1320" y="1160" width="180" height="190" rx="8" fill="#3a3a1a" stroke="#f1c40f" stroke-width="1.5"/>
+    <text x="1410" y="1190" text-anchor="middle" fill="#f1c40f" font-size="15" font-weight="bold">Backups</text>
+    <line x1="1335" y1="1210" x2="1485" y2="1210" stroke="#444" stroke-width="1"/>
+    <text x="1335" y="1230" fill="#ccc" font-size="11">• Daily DB Backup</text>
+    <text x="1335" y="1250" fill="#ccc" font-size="11">• Point-in-time</text>
+    <text x="1335" y="1270" fill="#ccc" font-size="11">  Recovery</text>
+    <text x="1335" y="1290" fill="#ccc" font-size="11">• Off-site Storage</text>
+    <text x="1335" y="1310" fill="#ccc" font-size="11">• 30-day retention</text>
+  </g>
+
+  <!-- ========== THIRD PARTY ========== -->
+  <text x="80" y="1410" fill="#d4af37" font-size="22" font-weight="bold">5. THIRD-PARTY INTEGRATIONS (التكامل الخارجي)</text>
+  <rect x="80" y="1430" width="1440" height="240" rx="10" fill="url(#thirdPartyGrad)" stroke="#e74c3c" stroke-width="2"/>
+
+  <g>
+    <rect x="120" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="220" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">MyFatoorah / Tap</text>
+    <text x="220" y="1510" text-anchor="middle" fill="#ccc" font-size="12">Payment Gateway</text>
+    <text x="220" y="1530" text-anchor="middle" fill="#aaa" font-size="11">Card / Apple Pay</text>
+  </g>
+  <g>
+    <rect x="340" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="440" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Firebase Auth</text>
+    <text x="440" y="1510" text-anchor="middle" fill="#ccc" font-size="12">OTP via SMS</text>
+    <text x="440" y="1530" text-anchor="middle" fill="#aaa" font-size="11">Mobile Authentication</text>
+  </g>
+  <g>
+    <rect x="560" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="660" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">FCM</text>
+    <text x="660" y="1510" text-anchor="middle" fill="#ccc" font-size="12">Push Notifications</text>
+    <text x="660" y="1530" text-anchor="middle" fill="#aaa" font-size="11">iOS + Android</text>
+  </g>
+  <g>
+    <rect x="780" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="880" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Google Maps</text>
+    <text x="880" y="1510" text-anchor="middle" fill="#ccc" font-size="12">Maps + Geocoding</text>
+    <text x="880" y="1530" text-anchor="middle" fill="#aaa" font-size="11">Directions + Places</text>
+  </g>
+  <g>
+    <rect x="1000" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="1100" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Twilio (Backup)</text>
+    <text x="1100" y="1510" text-anchor="middle" fill="#ccc" font-size="12">SMS Fallback</text>
+    <text x="1100" y="1530" text-anchor="middle" fill="#aaa" font-size="11">Voice Calls</text>
+  </g>
+  <g>
+    <rect x="1220" y="1460" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="1320" y="1490" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">SendGrid</text>
+    <text x="1320" y="1510" text-anchor="middle" fill="#ccc" font-size="12">Transactional Email</text>
+    <text x="1320" y="1530" text-anchor="middle" fill="#aaa" font-size="11">Invoices + Reports</text>
+  </g>
+
+  <g>
+    <rect x="120" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="220" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Mixpanel</text>
+    <text x="220" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Product Analytics</text>
+    <text x="220" y="1640" text-anchor="middle" fill="#aaa" font-size="11">User Behavior</text>
+  </g>
+  <g>
+    <rect x="340" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="440" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Sentry</text>
+    <text x="440" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Error Tracking</text>
+    <text x="440" y="1640" text-anchor="middle" fill="#aaa" font-size="11">Crash Reports</text>
+  </g>
+  <g>
+    <rect x="560" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="660" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">AppsFlyer</text>
+    <text x="660" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Attribution</text>
+    <text x="660" y="1640" text-anchor="middle" fill="#aaa" font-size="11">Marketing ROI</text>
+  </g>
+  <g>
+    <rect x="780" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="880" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Intercom</text>
+    <text x="880" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Customer Support</text>
+    <text x="880" y="1640" text-anchor="middle" fill="#aaa" font-size="11">Live Chat + Helpdesk</text>
+  </g>
+  <g>
+    <rect x="1000" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="1100" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Datadog</text>
+    <text x="1100" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Monitoring + APM</text>
+    <text x="1100" y="1640" text-anchor="middle" fill="#aaa" font-size="11">Infrastructure Health</text>
+  </g>
+  <g>
+    <rect x="1220" y="1570" width="200" height="90" rx="8" fill="#4a1a1a" stroke="#e74c3c" stroke-width="1.5"/>
+    <text x="1320" y="1600" text-anchor="middle" fill="#e74c3c" font-size="15" font-weight="bold">Zoho Books</text>
+    <text x="1320" y="1620" text-anchor="middle" fill="#ccc" font-size="12">Accounting</text>
+    <text x="1320" y="1640" text-anchor="middle" fill="#aaa" font-size="11">Invoices + Tax</text>
+  </g>
+
+  <!-- ========== DEVOPS ========== -->
+  <text x="80" y="1710" fill="#d4af37" font-size="22" font-weight="bold">6. DEVOPS &amp; INFRASTRUCTURE (البنية التحتية)</text>
+  <rect x="80" y="1730" width="1440" height="180" rx="10" fill="#1a2a1a" stroke="#16a085" stroke-width="2"/>
+
+  <g>
+    <rect x="120" y="1760" width="220" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="230" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">AWS Cloud</text>
+    <line x1="140" y1="1800" x2="320" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="140" y="1820" fill="#ccc" font-size="12">• EC2 / ECS</text>
+    <text x="140" y="1840" fill="#ccc" font-size="12">• RDS PostgreSQL</text>
+    <text x="140" y="1860" fill="#ccc" font-size="12">• ElastiCache</text>
+    <text x="140" y="1880" fill="#ccc" font-size="12">• S3 + CloudFront</text>
+  </g>
+  <g>
+    <rect x="360" y="1760" width="220" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="470" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">CI/CD Pipeline</text>
+    <line x1="380" y1="1800" x2="560" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="380" y="1820" fill="#ccc" font-size="12">• GitHub Actions</text>
+    <text x="380" y="1840" fill="#ccc" font-size="12">• Codemagic (Flutter)</text>
+    <text x="380" y="1860" fill="#ccc" font-size="12">• Auto Tests + Deploy</text>
+    <text x="380" y="1880" fill="#ccc" font-size="12">• Multi-environment</text>
+  </g>
+  <g>
+    <rect x="600" y="1760" width="220" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="710" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">Containerization</text>
+    <line x1="620" y1="1800" x2="800" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="620" y="1820" fill="#ccc" font-size="12">• Docker</text>
+    <text x="620" y="1840" fill="#ccc" font-size="12">• Kubernetes (EKS)</text>
+    <text x="620" y="1860" fill="#ccc" font-size="12">• Auto-scaling</text>
+    <text x="620" y="1880" fill="#ccc" font-size="12">• Health Checks</text>
+  </g>
+  <g>
+    <rect x="840" y="1760" width="220" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="950" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">Monitoring</text>
+    <line x1="860" y1="1800" x2="1040" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="860" y="1820" fill="#ccc" font-size="12">• Datadog APM</text>
+    <text x="860" y="1840" fill="#ccc" font-size="12">• Grafana + Prometheus</text>
+    <text x="860" y="1860" fill="#ccc" font-size="12">• PagerDuty Alerts</text>
+    <text x="860" y="1880" fill="#ccc" font-size="12">• Uptime Monitoring</text>
+  </g>
+  <g>
+    <rect x="1080" y="1760" width="220" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="1190" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">Security</text>
+    <line x1="1100" y1="1800" x2="1280" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="1100" y="1820" fill="#ccc" font-size="12">• HTTPS / TLS 1.3</text>
+    <text x="1100" y="1840" fill="#ccc" font-size="12">• WAF + DDoS Shield</text>
+    <text x="1100" y="1860" fill="#ccc" font-size="12">• Secrets Management</text>
+    <text x="1100" y="1880" fill="#ccc" font-size="12">• PCI-DSS Compliance</text>
+  </g>
+  <g>
+    <rect x="1320" y="1760" width="180" height="130" rx="8" fill="#1a3a3a" stroke="#16a085" stroke-width="1.5"/>
+    <text x="1410" y="1785" text-anchor="middle" fill="#16a085" font-size="15" font-weight="bold">Environments</text>
+    <line x1="1335" y1="1800" x2="1485" y2="1800" stroke="#444" stroke-width="1"/>
+    <text x="1335" y="1820" fill="#ccc" font-size="12">• Development</text>
+    <text x="1335" y="1840" fill="#ccc" font-size="12">• Staging</text>
+    <text x="1335" y="1860" fill="#ccc" font-size="12">• UAT</text>
+    <text x="1335" y="1880" fill="#ccc" font-size="12">• Production</text>
+  </g>
+
+  <!-- Connection Lines -->
+  <!-- Client to Edge -->
+  <line x1="260" y1="380" x2="280" y2="500" stroke="#d4af37" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <line x1="580" y1="380" x2="600" y2="500" stroke="#d4af37" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <line x1="900" y1="380" x2="920" y2="500" stroke="#d4af37" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <line x1="1220" y1="380" x2="1240" y2="500" stroke="#d4af37" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+
+  <!-- Edge to Backend -->
+  <line x1="600" y1="580" x2="600" y2="670" stroke="#4a90e2" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+  <line x1="920" y1="580" x2="920" y2="670" stroke="#4a90e2" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+  <line x1="1240" y1="580" x2="1240" y2="670" stroke="#4a90e2" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- Backend to Data -->
+  <line x1="440" y1="1050" x2="440" y2="1130" stroke="#27ae60" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+  <line x1="800" y1="1050" x2="800" y2="1130" stroke="#27ae60" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+  <line x1="1100" y1="1050" x2="1100" y2="1130" stroke="#27ae60" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- Backend to Third-party -->
+  <line x1="800" y1="1370" x2="800" y2="1430" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- Legend -->
+  <g transform="translate(80, 1950)">
+    <text x="0" y="0" fill="#888" font-size="12">⚪ © 2026 SENAM - Architecture Diagram v1.0 | Designed for scalability up to 100K MAU</text>
+    <text x="1100" y="0" fill="#d4af37" font-size="12" font-weight="bold">— = HTTPS/REST    --- = Async/Event-driven</text>
+  </g>
+</svg>
