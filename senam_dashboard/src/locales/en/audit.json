@@ -1,0 +1,18 @@
+{
+  "title": "Audit log",
+  "filter.actorId": "Actor ID",
+  "filter.targetType": "Target type",
+  "filter.targetId": "Target ID",
+  "filter.action": "Action",
+  "filter.from": "From",
+  "filter.to": "To",
+  "filter.apply": "Apply",
+  "filter.clear": "Clear",
+  "table.at": "Time",
+  "table.actor": "Actor",
+  "table.action": "Action",
+  "table.target": "Target",
+  "table.details": "Details",
+  "sheet.title": "Audit entry",
+  "empty": "No audit entries"
+}

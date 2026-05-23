@@ -1,0 +1,16 @@
+{
+  "title": "تقرير المبيعات",
+  "filter.from": "من",
+  "filter.to": "إلى",
+  "filter.category": "التصنيف",
+  "filter.allCategories": "كل التصنيفات",
+  "filter.apply": "تطبيق",
+  "kpi.gmv": "إجمالي المبيعات",
+  "kpi.orders": "عدد الطلبات",
+  "kpi.commission": "العمولات المحصّلة",
+  "kpi.avgOrder": "متوسط قيمة الطلب",
+  "chart.title": "إجمالي المبيعات مقابل عدد الطلبات",
+  "chart.gmv": "الإجمالي",
+  "chart.orders": "الطلبات",
+  "empty": "لا توجد بيانات في هذا النطاق"
+}

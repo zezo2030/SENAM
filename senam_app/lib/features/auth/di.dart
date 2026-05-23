@@ -1,22 +1,30 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/auth_local_datasource.dart';
+import 'data/datasources/auth_remote_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'domain/repositories/auth_repository.dart';
-import 'domain/usecases/login.dart';
+import 'domain/usecases/login_with_password.dart';
+import 'domain/usecases/register_account.dart';
+import 'domain/usecases/update_profile.dart';
 import 'presentation/cubit/auth_cubit.dart';
 
-/// تسجيل تبعيات ميزة المصادقة.
+/// تسجيل تبعيات ميزة المصادقة (Email + Password customer flow).
 void initAuthDi(GetIt sl) {
-  // Data sources
-  sl.registerLazySingleton<AuthDataSource>(() => AuthLocalDataSource());
+  sl.registerLazySingleton<AuthDataSource>(
+    () => AuthRemoteDataSource(sl(), sl()),
+  );
 
-  // Repository
-  sl.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
 
-  // Use cases
-  sl.registerLazySingleton(() => Login(sl()));
+  sl.registerLazySingleton(() => LoginWithPassword(sl()));
+  sl.registerLazySingleton(() => RegisterAccount(sl()));
+  sl.registerLazySingleton(() => UpdateProfile(sl()));
 
-  // Cubit
-  sl.registerFactory(() => AuthCubit(loginUseCase: sl()));
+  sl.registerFactory(
+    () => AuthCubit(
+      loginUseCase: sl(),
+      registerUseCase: sl(),
+      updateProfileUseCase: sl(),
+    ),
+  );
 }

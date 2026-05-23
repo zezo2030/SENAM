@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/theme/app_theme.dart';
@@ -11,6 +12,8 @@ Future<void> main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+
+  await dotenv.load(fileName: '.env');
 
   // تهيئة حاوية حقن التبعيات (Clean Architecture)
   await di.initDependencies();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
+import '../../../provider_application/presentation/pages/provider_application_page.dart';
 import 'login_page.dart';
 
 /// محتوى شاشات التعريف (نص ثابت — جزء من واجهة المستخدم).
@@ -98,10 +99,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 }),
               ),
               Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                 child: ElevatedButton(
                   onPressed: _next,
                   child: Text(isLast ? 'ابدأ الآن' : 'التالي'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProviderApplicationPage(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.business_center_outlined,
+                      color: AppColors.gold, size: 18),
+                  label: const Text(
+                    'انضم كشركة (مزوّد خدمة)',
+                    style: TextStyle(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13),
+                  ),
                 ),
               ),
             ],

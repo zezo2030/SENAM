@@ -1,0 +1,43 @@
+# Version control
+.git/
+.gitignore
+
+# Node
+node_modules/
+
+# Build output (re-built inside Docker)
+dist/
+build/
+
+# Test artefacts
+coverage/
+test/load/results/
+
+# Env files (secrets must come from container env, not baked in)
+.env
+.env.*
+!.env.example
+
+# Dev config
+docker-compose.dev.yml
+nest-cli.json
+
+# Editor / OS artefacts
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docs
+docs/
+README.md
+
+# Logs
+*.log
+logs/
+
+# TypeScript source maps (not needed at runtime)
+**/*.js.map
+**/*.d.ts.map

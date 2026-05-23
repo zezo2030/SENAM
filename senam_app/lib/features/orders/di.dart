@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/orders_local_datasource.dart';
+import 'data/datasources/orders_remote_datasource.dart';
 import 'data/repositories/orders_repository_impl.dart';
 import 'domain/repositories/orders_repository.dart';
 import 'domain/usecases/cancel_order.dart';
@@ -11,8 +12,8 @@ import 'presentation/cubit/rating_cubit.dart';
 
 /// تسجيل تبعيات ميزة الطلبات في حاوية الـ DI.
 void initOrdersDi(GetIt sl) {
-  // Data sources
-  sl.registerLazySingleton<OrdersDataSource>(() => OrdersLocalDataSource());
+  // Data sources — remote بدلاً من المحلي
+  sl.registerLazySingleton<OrdersDataSource>(() => OrdersRemoteDataSource(sl()));
 
   // Repositories
   sl.registerLazySingleton<OrdersRepository>(

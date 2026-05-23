@@ -11,6 +11,7 @@ void initHomeDi(GetIt sl) {
       getCategories: sl(),
       getTrustedCompanies: sl(),
       getOffers: sl(),
+      getActiveBanners: sl(),
     ),
   );
 }

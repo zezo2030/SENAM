@@ -7,6 +7,7 @@ class HomeState extends Equatable {
   final List<ServiceCategory> categories;
   final List<Company> trustedCompanies;
   final List<Offer> offers;
+  final List<Banner> banners;
   final String? errorMessage;
 
   const HomeState({
@@ -14,6 +15,7 @@ class HomeState extends Equatable {
     this.categories = const [],
     this.trustedCompanies = const [],
     this.offers = const [],
+    this.banners = const [],
     this.errorMessage,
   });
 
@@ -22,6 +24,7 @@ class HomeState extends Equatable {
     List<ServiceCategory>? categories,
     List<Company>? trustedCompanies,
     List<Offer>? offers,
+    List<Banner>? banners,
     String? errorMessage,
   }) {
     return HomeState(
@@ -29,11 +32,12 @@ class HomeState extends Equatable {
       categories: categories ?? this.categories,
       trustedCompanies: trustedCompanies ?? this.trustedCompanies,
       offers: offers ?? this.offers,
+      banners: banners ?? this.banners,
       errorMessage: errorMessage,
     );
   }
 
   @override
   List<Object?> get props =>
-      [status, categories, trustedCompanies, offers, errorMessage];
+      [status, categories, trustedCompanies, offers, banners, errorMessage];
 }

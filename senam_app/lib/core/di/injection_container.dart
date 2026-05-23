@@ -1,28 +1,31 @@
 import 'package:get_it/get_it.dart';
 
+import '../auth/token_storage.dart';
+import '../network/api_client.dart';
 import '../../features/account/di.dart';
 import '../../features/auth/di.dart';
+import '../../features/banners/di.dart';
 import '../../features/booking/di.dart';
 import '../../features/car_rental/di.dart';
 import '../../features/favorites/di.dart';
 import '../../features/home/di.dart';
 import '../../features/offers/di.dart';
 import '../../features/orders/di.dart';
+import '../../features/provider_application/di.dart';
 import '../../features/services/di.dart';
 
 /// حاوية حقن التبعيات (Dependency Injection) لتطبيق SENAM.
-///
-/// تُسجَّل كل التبعيات هنا ويُحصَل عليها عبر `sl<T>()`.
 final GetIt sl = GetIt.instance;
 
-/// تهيئة كل تبعيات التطبيق — تُستدعى مرة واحدة في `main()`.
-///
-/// تُسجَّل ميزتا `services` و`offers` أولاً لأن ميزات أخرى
-/// (`home`, `favorites`) تعتمد على Use Cases منهما.
 Future<void> initDependencies() async {
+  // البنية التحتية للشبكة + التخزين الآمن
+  sl.registerLazySingleton<TokenStorage>(() => TokenStorage());
+  sl.registerLazySingleton<ApiClient>(() => ApiClient(tokenStorage: sl()));
+
   // الميزات المشتركة (يجب تسجيلها أولاً)
   initServicesDi(sl);
   initOffersDi(sl);
+  initBannersDi(sl);
 
   // بقية الميزات
   initAuthDi(sl);
@@ -32,4 +35,5 @@ Future<void> initDependencies() async {
   initFavoritesDi(sl);
   initCarRentalDi(sl);
   initAccountDi(sl);
+  initProviderApplicationDi(sl);
 }

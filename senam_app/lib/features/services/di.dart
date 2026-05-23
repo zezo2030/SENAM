@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/services_local_datasource.dart';
+import 'data/datasources/services_remote_datasource.dart';
 import 'data/repositories/services_repository_impl.dart';
 import 'domain/repositories/services_repository.dart';
 import 'domain/usecases/get_categories.dart';
@@ -12,9 +13,9 @@ import 'presentation/cubit/company_details_cubit.dart';
 
 /// تسجيل اعتماديات ميزة الخدمات في حاوية الـ DI.
 void initServicesDi(GetIt sl) {
-  // datasource
+  // datasource — remote بدلاً من المحلي
   sl.registerLazySingleton<ServicesDataSource>(
-      () => ServicesLocalDataSource());
+      () => ServicesRemoteDataSource(sl()));
 
   // repository
   sl.registerLazySingleton<ServicesRepository>(

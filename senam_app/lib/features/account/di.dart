@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'data/datasources/account_local_datasource.dart';
+import 'data/datasources/account_remote_datasource.dart';
 import 'data/repositories/account_repository_impl.dart';
 import 'domain/repositories/account_repository.dart';
 import 'domain/usecases/get_notifications.dart';
@@ -10,7 +11,7 @@ import 'presentation/cubit/notifications_cubit.dart';
 /// تسجيل اعتماديات ميزة الحساب في حاوية الـ DI.
 void initAccountDi(GetIt sl) {
   sl.registerLazySingleton<AccountDataSource>(
-      () => AccountLocalDataSource());
+      () => AccountRemoteDataSource(sl()));
   sl.registerLazySingleton<AccountRepository>(
       () => AccountRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetProfile(sl()));

@@ -4,6 +4,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../../../account/presentation/pages/notifications_page.dart';
+import '../../../banners/domain/entities/banner.dart' as domain;
 import '../../../offers/domain/entities/offer.dart';
 import '../../../services/domain/entities/company.dart';
 import '../../../services/domain/entities/service_category.dart';
@@ -65,7 +66,7 @@ class _HomeView extends StatelessWidget {
               children: [
                 const _TopBar(),
                 const SizedBox(height: 16),
-                const _PromoBanner(),
+                _PromoBanner(banners: state.banners),
                 const SizedBox(height: 22),
                 SectionHeader(title: 'خدمات سريعة', onSeeAll: () {}),
                 const SizedBox(height: 12),
@@ -130,50 +131,36 @@ class _TopBar extends StatelessWidget {
 }
 
 class _PromoBanner extends StatefulWidget {
-  const _PromoBanner();
+  final List<domain.Banner> banners;
+  const _PromoBanner({required this.banners});
 
   @override
   State<_PromoBanner> createState() => _PromoBannerState();
 }
 
 class _PromoSlide {
-  final String title;
-  final String highlight;
-  final String desc;
-  final String imagePath;
+  final String? imageUrl;
+  final String? imageAsset;
 
-  const _PromoSlide({
-    required this.title,
-    required this.highlight,
-    required this.desc,
-    required this.imagePath,
-  });
+  const _PromoSlide({this.imageUrl, this.imageAsset});
 }
 
 class _PromoBannerState extends State<_PromoBanner> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _slides = [
-    _PromoSlide(
-      title: 'خدمات موثوقة',
-      highlight: 'تجربة فاخرة',
-      desc: 'كل ما تحتاجه... في مكان واحد',
-      imagePath: 'assets/images/home/promo_car_premium.png',
-    ),
-    _PromoSlide(
-      title: 'غسيل سيارات',
-      highlight: 'متنقل',
-      desc: 'نجيك وين ما كنت',
-      imagePath: 'assets/images/home/promo_wash_premium.png',
-    ),
-    _PromoSlide(
-      title: 'خصم 30%',
-      highlight: 'على أول طلب',
-      desc: 'استخدم الكود SENAM30',
-      imagePath: 'assets/images/home/promo_home_premium.png',
-    ),
+  static const _fallbackSlides = <_PromoSlide>[
+    _PromoSlide(imageAsset: 'assets/images/home/promo_car_premium.png'),
+    _PromoSlide(imageAsset: 'assets/images/home/promo_wash_premium.png'),
+    _PromoSlide(imageAsset: 'assets/images/home/promo_home_premium.png'),
   ];
+
+  List<_PromoSlide> get _slides {
+    if (widget.banners.isEmpty) return _fallbackSlides;
+    return widget.banners
+        .map((b) => _PromoSlide(imageUrl: b.imageUrl))
+        .toList(growable: false);
+  }
 
   @override
   void dispose() {
@@ -183,25 +170,32 @@ class _PromoBannerState extends State<_PromoBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final slides = _slides;
     return Stack(
       children: [
         SizedBox(
           height: 180,
           child: PageView.builder(
             controller: _controller,
-            itemCount: _slides.length,
+            itemCount: slides.length,
             onPageChanged: (i) => setState(() => _page = i),
             itemBuilder: (_, i) {
-              final s = _slides[i];
+              final s = slides[i];
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    s.imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
+                  child: s.imageUrl != null
+                      ? Image.network(
+                          s.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, st) => const SizedBox(),
+                        )
+                      : Image.asset(
+                          s.imageAsset!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, st) => const SizedBox(),
+                        ),
                 ),
               );
             },
@@ -213,7 +207,7 @@ class _PromoBannerState extends State<_PromoBanner> {
           right: 0,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_slides.length, (i) {
+            children: List.generate(slides.length, (i) {
               final active = i == _page;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),

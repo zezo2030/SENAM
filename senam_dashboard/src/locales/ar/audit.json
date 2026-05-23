@@ -1,0 +1,18 @@
+{
+  "title": "سجل التدقيق",
+  "filter.actorId": "معرّف المنفّذ",
+  "filter.targetType": "نوع الهدف",
+  "filter.targetId": "معرّف الهدف",
+  "filter.action": "الإجراء",
+  "filter.from": "من",
+  "filter.to": "إلى",
+  "filter.apply": "تطبيق",
+  "filter.clear": "مسح",
+  "table.at": "الوقت",
+  "table.actor": "المنفّذ",
+  "table.action": "الإجراء",
+  "table.target": "الهدف",
+  "table.details": "التفاصيل",
+  "sheet.title": "سجل التدقيق",
+  "empty": "لا توجد سجلات"
+}

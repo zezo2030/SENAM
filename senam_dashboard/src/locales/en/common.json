@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "SENAM Dashboard",
+    "tagline": "Admin & Provider control center"
+  },
+  "nav": {
+    "overview": "Overview",
+    "companies": "Companies",
+    "users": "Users",
+    "orders": "Orders",
+    "catalog": "Catalog",
+    "categories": "Categories",
+    "services": "Services",
+    "coupons": "Coupons",
+    "banners": "Banners",
+    "settlements": "Settlements",
+    "reports": "Reports",
+    "audit": "Audit",
+    "staff": "Staff",
+    "financials": "Financials",
+    "profile": "Profile",
+    "logout": "Log out"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "approve": "Approve",
+    "suspend": "Suspend",
+    "void": "Void",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "refresh": "Refresh"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "lang": {
+    "en": "English",
+    "ar": "العربية"
+  },
+  "states": {
+    "loading": "Loading…",
+    "empty": "Nothing to show",
+    "error": "Something went wrong"
+  },
+  "upload": {
+    "choose": "Choose image",
+    "replace": "Replace image",
+    "remove": "Remove image",
+    "success": "Image uploaded",
+    "failed": "Upload failed",
+    "tooLarge": "File too large (max {{mb}} MB)"
+  },
+  "welcome": "Welcome to SENAM. Sign in to continue."
+}

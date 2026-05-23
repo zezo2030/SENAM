@@ -1,0 +1,16 @@
+{
+  "title": "Sales report",
+  "filter.from": "From",
+  "filter.to": "To",
+  "filter.category": "Category",
+  "filter.allCategories": "All categories",
+  "filter.apply": "Apply",
+  "kpi.gmv": "GMV",
+  "kpi.orders": "Orders",
+  "kpi.commission": "Commission earned",
+  "kpi.avgOrder": "Avg. order value",
+  "chart.title": "Gross vs. orders",
+  "chart.gmv": "GMV",
+  "chart.orders": "Orders",
+  "empty": "No data in this range"
+}
