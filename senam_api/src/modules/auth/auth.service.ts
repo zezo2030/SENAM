@@ -56,12 +56,18 @@ export class AuthService {
         await this.userRepository.update(user.id, { emailVerifiedAt: new Date() });
       }
 
-      return this.tokensService.issueTokenPair({ sub: user.id, principal, roles: [] });
+      return this.tokensService.issueTokenPair({
+        sub: user.id,
+        principal,
+        roles: [],
+        email: user.email,
+        name: user.displayName?.trim() || user.email,
+      });
     } else if (principal === 'admin') {
       const admins = await this.dataSource.query(
-        `SELECT id, status FROM admin_users WHERE email = $1`,
+        `SELECT id, status, email, display_name FROM admin_users WHERE email = $1`,
         [email],
-      ) as Array<{ id: string; status: string }>;
+      ) as Array<{ id: string; status: string; email: string; display_name: string | null }>;
       const admin = admins[0];
       if (!admin || admin.status !== 'active') throw new UnauthorizedException('account_not_accessible');
 
@@ -74,6 +80,8 @@ export class AuthService {
         sub: admin.id,
         principal: 'admin',
         roles: roles.map(r => r.slug),
+        email: admin.email,
+        name: admin.display_name?.trim() || admin.email,
       });
     } else {
       throw new UnauthorizedException('principal_not_supported');
@@ -118,6 +126,8 @@ export class AuthService {
       sub: user.id,
       principal: 'customer',
       roles: [],
+      email: user.email,
+      name: user.displayName?.trim() || user.email,
     });
   }
 
@@ -151,14 +161,22 @@ export class AuthService {
         sub: user.id,
         principal: 'customer',
         roles: [],
+        email: user.email,
+        name: user.displayName?.trim() || user.email,
       });
     }
 
     if (principal === 'admin') {
       const admins = await this.dataSource.query(
-        `SELECT id, password_hash, status FROM admin_users WHERE email = $1`,
-        [email],
-      ) as Array<{ id: string; password_hash: string | null; status: string }>;
+        `SELECT id, password_hash, status, email, display_name FROM admin_users WHERE email = $1`,
+        [normalizedEmail],
+      ) as Array<{
+        id: string;
+        password_hash: string | null;
+        status: string;
+        email: string;
+        display_name: string | null;
+      }>;
       const admin = admins[0];
       if (!admin || admin.status !== 'active' || !admin.password_hash) {
         throw new UnauthorizedException('invalid_credentials');
@@ -176,18 +194,27 @@ export class AuthService {
         sub: admin.id,
         principal: 'admin',
         roles: roles.map((r) => r.slug),
+        email: admin.email,
+        name: admin.display_name?.trim() || admin.email,
       });
     }
 
     const users = await this.dataSource.query(
-      `SELECT id, company_id, password_hash, status, role FROM company_users WHERE email = $1`,
-      [email],
+      `SELECT cu.id, cu.company_id, cu.password_hash, cu.status, cu.role, cu.email, cu.display_name,
+              c.display_name AS company_display_name
+       FROM company_users cu
+       JOIN companies c ON c.id = cu.company_id
+       WHERE cu.email = $1`,
+      [normalizedEmail],
     ) as Array<{
       id: string;
       company_id: string;
       password_hash: string | null;
       status: string;
       role: string;
+      email: string;
+      display_name: string | null;
+      company_display_name: string;
     }>;
     const user = users[0];
     if (!user || user.status !== 'active' || !user.password_hash) {
@@ -197,12 +224,18 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) throw new UnauthorizedException('invalid_credentials');
 
-    const providerRole = user.role === 'owner' ? 'provider_owner' : 'provider_staff';
+    const displayName =
+      user.display_name?.trim() ||
+      user.company_display_name?.trim() ||
+      user.email;
+
     return this.tokensService.issueTokenPair({
       sub: user.id,
       principal: 'provider',
-      roles: [providerRole],
+      roles: ['provider_owner'],
       companyId: user.company_id,
+      email: user.email,
+      name: displayName,
     });
   }
 

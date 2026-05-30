@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { uploadImage, type UploadPurpose } from '@/lib/api/uploads';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -64,7 +65,7 @@ export function ImageUpload({
         <div className="group relative overflow-hidden rounded-md border bg-muted/30">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value}
+            src={resolveMediaUrl(value)}
             alt="preview"
             className="h-40 w-full object-cover"
             onError={(ev) => {

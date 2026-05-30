@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Bar,
   CartesianGrid,
-  ComposedChart,
   Legend,
   Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,23 +13,12 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { useSalesReport, type SalesParams } from '@/api/admin-reports.api';
-import { useCategories } from '@/api/admin-catalog.api';
+import { useDirectoryReport, type DirectoryParams } from '@/api/admin-reports.api';
 import { DateRangeFilter, type DateRange } from '@/components/shared/DateRangeFilter';
 import { useUiStore } from '@/store/ui.store';
-import { formatMoneyMinor, formatDate } from '@/lib/formatters';
-
-const ALL = '__all__';
+import { formatDate } from '@/lib/formatters';
 
 function defaultRange(): DateRange {
   const now = new Date();
@@ -44,34 +32,26 @@ function defaultRange(): DateRange {
 export default function AdminReportsPage() {
   const { t } = useTranslation('reports');
   const lang = useUiStore((s) => s.lang);
+  const initialRange = useMemo(() => defaultRange(), []);
 
-  const [range, setRange] = useState<DateRange>(defaultRange());
-  const [categoryId, setCategoryId] = useState<string>(ALL);
-  const [applied, setApplied] = useState<SalesParams>(() => ({
-    from: defaultRange().from,
-    to: defaultRange().to,
-    granularity: 'day',
-  }));
+  const [range, setRange] = useState<DateRange>(initialRange);
+  const [applied, setApplied] = useState<DirectoryParams>(initialRange);
 
-  const { data: categories = [] } = useCategories();
-  const { data, isPending } = useSalesReport(applied);
+  const { data, isPending } = useDirectoryReport(applied);
 
   const apply = () => {
-    setApplied({
-      from: range.from,
-      to: range.to,
-      granularity: 'day',
-      categoryId: categoryId === ALL ? undefined : categoryId,
-    });
+    setApplied({ from: range.from, to: range.to });
   };
 
-  const chartData = useMemo(() => {
-    return (data?.buckets ?? []).map((b) => ({
-      date: formatDate(b.date, 'MMM d', lang),
-      gmv: Number(b.grossMinor ?? 0) / 100,
-      orders: Number(b.orderCount ?? 0),
-    }));
-  }, [data, lang]);
+  const chartData = useMemo(
+    () =>
+      (data?.byDay ?? []).map((b) => ({
+        date: formatDate(b.date, 'MMM d', lang),
+        registrations: b.registrations,
+        reviews: b.reviews,
+      })),
+    [data, lang],
+  );
 
   return (
     <div className="space-y-4">
@@ -80,22 +60,6 @@ export default function AdminReportsPage() {
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
           <DateRangeFilter value={range} onChange={setRange} />
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">{t('filter.category')}</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger className="w-[240px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t('filter.allCategories')}</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nameEn ?? c.nameAr ?? c.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="ms-auto">
             <Button onClick={apply}>{t('filter.apply')}</Button>
           </div>
@@ -104,23 +68,23 @@ export default function AdminReportsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label={t('kpi.gmv')}
-          value={formatMoneyMinor(data?.gmvMinor ?? null, 'QAR', lang)}
+          label={t('kpi.totalCompanies')}
+          value={data?.totalCompanies?.toLocaleString(lang) ?? '—'}
           loading={isPending}
         />
         <KpiCard
-          label={t('kpi.orders')}
-          value={data?.orderCount?.toLocaleString(lang) ?? '—'}
+          label={t('kpi.activeCompanies')}
+          value={data?.activeCompanies?.toLocaleString(lang) ?? '—'}
           loading={isPending}
         />
         <KpiCard
-          label={t('kpi.commission')}
-          value={formatMoneyMinor(data?.commissionMinor ?? null, 'QAR', lang)}
+          label={t('kpi.pendingCompanies')}
+          value={data?.pendingCompanies?.toLocaleString(lang) ?? '—'}
           loading={isPending}
         />
         <KpiCard
-          label={t('kpi.avgOrder')}
-          value={formatMoneyMinor(data?.avgOrderMinor ?? null, 'QAR', lang)}
+          label={t('kpi.totalReviews')}
+          value={data?.totalReviews?.toLocaleString(lang) ?? '—'}
           loading={isPending}
         />
       </div>
@@ -138,30 +102,29 @@ export default function AdminReportsPage() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="date" fontSize={12} />
-                <YAxis yAxisId="left" fontSize={12} />
-                <YAxis yAxisId="right" orientation="right" fontSize={12} />
+                <YAxis fontSize={12} />
                 <Tooltip />
                 <Legend />
-                <Bar
-                  yAxisId="left"
-                  dataKey="gmv"
-                  name={t('chart.gmv')}
-                  fill="hsl(var(--primary))"
-                  radius={[4, 4, 0, 0]}
+                <Line
+                  type="monotone"
+                  dataKey="registrations"
+                  name={t('chart.registrations')}
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
                 />
                 <Line
-                  yAxisId="right"
                   type="monotone"
-                  dataKey="orders"
-                  name={t('chart.orders')}
+                  dataKey="reviews"
+                  name={t('chart.reviews')}
                   stroke="hsl(var(--destructive))"
                   strokeWidth={2}
                   dot={false}
                 />
-              </ComposedChart>
+              </LineChart>
             </ResponsiveContainer>
           )}
         </CardContent>

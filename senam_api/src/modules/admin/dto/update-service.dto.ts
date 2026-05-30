@@ -1,17 +1,15 @@
 import {
   IsString,
   IsOptional,
-  IsUUID,
-  IsInt,
   IsBoolean,
-  Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+import { IsUuidLoose } from '../../../common/decorators/is-uuid-loose.decorator.js';
 export class UpdateServiceDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsUUID()
+  @IsUuidLoose()
   categoryId?: string;
 
   @ApiPropertyOptional()
@@ -34,11 +32,20 @@ export class UpdateServiceDto {
   @IsString()
   descriptionAr?: string;
 
-  @ApiPropertyOptional({ minimum: 1 })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  baseDurationMinutes?: number;
+  @IsString()
+  descriptionEn?: string;
+
+  @ApiPropertyOptional({ description: 'Uploaded icon object key' })
+  @IsOptional()
+  @IsString()
+  iconKey?: string;
+
+  @ApiPropertyOptional({ description: 'Uploaded banner image object key' })
+  @IsOptional()
+  @IsString()
+  imageKey?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

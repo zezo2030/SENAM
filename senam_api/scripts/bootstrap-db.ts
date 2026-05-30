@@ -3,19 +3,30 @@ import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { ExtensionsAndUsers0001 } from '../migrations/0001_extensions_and_users.ts';
-import { AddressesFavorites0002 } from '../migrations/0002_addresses_favorites.ts';
-import { Catalog0003 } from '../migrations/0003_catalog.ts';
-import { Companies0004 } from '../migrations/0004_companies.ts';
-import { Slots0005 } from '../migrations/0005_slots.ts';
-import { Orders0006 } from '../migrations/0006_orders.ts';
-import { Payments0007 } from '../migrations/0007_payments.ts';
-import { CouponUsages0008 } from '../migrations/0008_coupons.ts';
-import { Reviews0009 } from '../migrations/0009_reviews.ts';
-import { Notifications0010 } from '../migrations/0010_notifications.ts';
-import { Rbac0011 } from '../migrations/0011_rbac.ts';
-import { AuditSettlements0012 } from '../migrations/0012_audit_settlements.ts';
-import { DashboardPasswords0013 } from '../migrations/0013_dashboard_passwords.ts';
+import { ExtensionsAndUsers0001 } from '../migrations/0001_extensions_and_users.js';
+import { AddressesFavorites0002 } from '../migrations/0002_addresses_favorites.js';
+import { Catalog0003 } from '../migrations/0003_catalog.js';
+import { Companies0004 } from '../migrations/0004_companies.js';
+import { Slots0005 } from '../migrations/0005_slots.js';
+import { Orders0006 } from '../migrations/0006_orders.js';
+import { Payments0007 } from '../migrations/0007_payments.js';
+import { CouponUsages0008 } from '../migrations/0008_coupons.js';
+import { Reviews0009 } from '../migrations/0009_reviews.js';
+import { Notifications0010 } from '../migrations/0010_notifications.js';
+import { Rbac0011 } from '../migrations/0011_rbac.js';
+import { AuditSettlements0012 } from '../migrations/0012_audit_settlements.js';
+import { DashboardPasswords0013 } from '../migrations/0013_dashboard_passwords.js';
+import { Banners0014 } from '../migrations/0014_banners.js';
+import { UserPassword0015 } from '../migrations/0015_user_password.js';
+import { ProviderApplicationExtensions0016 } from '../migrations/0016_provider_application_extensions.js';
+import { ServiceIconImage0017 } from '../migrations/0017_service_icon_image.js';
+import { ServiceDescriptionEn0018 } from '../migrations/0018_service_description_en.js';
+import { CompanyMediaAndContent0019 } from '../migrations/0019_company_media_and_content.js';
+import { CompanyGalleryPhotos0020 } from '../migrations/0020_company_gallery_photos.js';
+import { DecoupleReviewsFromOrders0021 } from '../migrations/0021_decouple_reviews_from_orders.js';
+import { DropMarketplaceTables0022 } from '../migrations/0022_drop_marketplace_tables.js';
+import { CompanyUsersOwnerOnly0023 } from '../migrations/0023_company_users_owner_only.js';
+import { DropCompanyServicePriceDuration0024 } from '../migrations/0024_drop_company_service_price_duration.js';
 
 config();
 
@@ -34,6 +45,17 @@ const migrations = [
   new Rbac0011(),
   new AuditSettlements0012(),
   new DashboardPasswords0013(),
+  new Banners0014(),
+  new UserPassword0015(),
+  new ProviderApplicationExtensions0016(),
+  new ServiceIconImage0017(),
+  new ServiceDescriptionEn0018(),
+  new CompanyMediaAndContent0019(),
+  new CompanyGalleryPhotos0020(),
+  new DecoupleReviewsFromOrders0021(),
+  new DropMarketplaceTables0022(),
+  new CompanyUsersOwnerOnly0023(),
+  new DropCompanyServicePriceDuration0024(),
 ];
 
 const dataSource = new DataSource({
@@ -47,19 +69,29 @@ await dataSource.initialize();
 const queryRunner = dataSource.createQueryRunner();
 await queryRunner.connect();
 
+await queryRunner.query(
+  `CREATE TABLE IF NOT EXISTS migrations (
+     id SERIAL PRIMARY KEY,
+     timestamp BIGINT NOT NULL,
+     name TEXT NOT NULL
+   )`,
+);
+
 for (const migration of migrations) {
-  console.log(`Running ${migration.name}...`);
-  await migration.up(queryRunner);
   const existing = await queryRunner.query(
     `SELECT 1 FROM migrations WHERE name = $1 LIMIT 1`,
     [migration.name],
   );
-  if (!existing.length) {
-    await queryRunner.query(
-      `INSERT INTO migrations (timestamp, name) VALUES ($1, $2)`,
-      [0, migration.name],
-    );
+  if (existing.length) {
+    console.log(`Skipping ${migration.name} (already applied)`);
+    continue;
   }
+  console.log(`Running ${migration.name}...`);
+  await migration.up(queryRunner);
+  await queryRunner.query(
+    `INSERT INTO migrations (timestamp, name) VALUES ($1, $2)`,
+    [0, migration.name],
+  );
 }
 
 const passwordHash = await bcrypt.hash('123456', 10);

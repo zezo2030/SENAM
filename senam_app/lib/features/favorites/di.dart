@@ -6,6 +6,9 @@ import 'presentation/cubit/favorites_cubit.dart';
 /// تعتمد على Use Case من ميزة `services` — تُستدعى بعدها.
 void initFavoritesDi(GetIt sl) {
   sl.registerFactory(
-    () => FavoritesCubit(getFavoriteCompanies: sl()),
+    () => FavoritesCubit(
+      getFavoriteCompanies: sl(),
+      tokenStorage: sl(),
+    ),
   );
 }

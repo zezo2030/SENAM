@@ -101,7 +101,9 @@ class ProviderApplicationRemoteDataSource
 
       // Step 1 optionals
       if (draft.logoObjectKey != null) body['logoObjectKey'] = draft.logoObjectKey;
-      if (draft.categoryId != null) body['categoryId'] = draft.categoryId;
+      if (draft.categoryId != null && _isUuid(draft.categoryId!)) {
+        body['categoryId'] = draft.categoryId;
+      }
       if (_isFilled(draft.commercialRegistrationNo)) {
         body['commercialRegistrationNo'] = draft.commercialRegistrationNo;
       }
@@ -114,7 +116,9 @@ class ProviderApplicationRemoteDataSource
       if (_isFilled(draft.city)) body['city'] = draft.city;
 
       // Step 2
-      if (draft.serviceIds.isNotEmpty) body['serviceIds'] = draft.serviceIds;
+      final cleanServiceIds =
+          draft.serviceIds.where((id) => _isUuid(id.trim())).toList();
+      if (cleanServiceIds.isNotEmpty) body['serviceIds'] = cleanServiceIds;
       if (_isFilled(draft.customServiceText)) {
         body['customServiceText'] = draft.customServiceText;
       }
@@ -161,6 +165,12 @@ class ProviderApplicationRemoteDataSource
   }
 
   static bool _isFilled(String? v) => v != null && v.trim().isNotEmpty;
+
+  static final RegExp _uuidRegex = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  static bool _isUuid(String v) => _uuidRegex.hasMatch(v);
 
   @override
   Future<CompanyApplicationStatusModel> getStatus(String companyId) async {

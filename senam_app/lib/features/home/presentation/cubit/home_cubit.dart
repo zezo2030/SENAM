@@ -8,14 +8,14 @@ import '../../../offers/domain/usecases/get_offers.dart';
 import '../../../services/domain/entities/company.dart';
 import '../../../services/domain/entities/service_category.dart';
 import '../../../services/domain/usecases/get_categories.dart';
-import '../../../services/domain/usecases/get_favorite_companies.dart';
+import '../../../services/domain/usecases/get_companies.dart';
 
 part 'home_state.dart';
 
 /// Cubit الصفحة الرئيسية — يجمّع بيانات من ميزات متعددة (services + offers + banners).
 class HomeCubit extends Cubit<HomeState> {
   final GetCategories getCategories;
-  final GetFavoriteCompanies getTrustedCompanies;
+  final GetCompanies getTrustedCompanies;
   final GetOffers getOffers;
   final GetActiveBanners getActiveBanners;
 

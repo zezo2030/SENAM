@@ -1,6 +1,6 @@
 part of 'favorites_cubit.dart';
 
-enum FavoritesStatus { initial, loading, success, failure }
+enum FavoritesStatus { initial, loading, guest, success, failure }
 
 class FavoritesState extends Equatable {
   final FavoritesStatus status;

@@ -10,6 +10,24 @@ export type CompanyStatus = 'pending' | 'active' | 'suspended';
 export type SubscriptionPlan = 'basic' | 'pro' | 'vip';
 export type SubscriptionPeriod = 'monthly' | 'annual' | 'promo';
 
+export interface LocalizedLabel {
+  ar: string;
+  en: string;
+  icon?: string;
+}
+
+export interface GalleryCategory {
+  id: string;
+  ar: string;
+  en: string;
+  sortOrder: number;
+}
+
+const numericTransformer = {
+  to: (v?: number | null) => v,
+  from: (v?: string | null) => (v == null ? null : Number(v)),
+};
+
 @Entity('companies')
 export class CompanyEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -29,6 +47,24 @@ export class CompanyEntity {
 
   @Column({ name: 'logo_object_key', type: 'text', nullable: true })
   logoObjectKey!: string | null;
+
+  @Column({ name: 'cover_object_key', type: 'text', nullable: true })
+  coverObjectKey!: string | null;
+
+  @Column({ type: 'numeric', precision: 9, scale: 6, nullable: true, transformer: numericTransformer })
+  latitude!: number | null;
+
+  @Column({ type: 'numeric', precision: 9, scale: 6, nullable: true, transformer: numericTransformer })
+  longitude!: number | null;
+
+  @Column({ name: 'map_url', type: 'text', nullable: true })
+  mapUrl!: string | null;
+
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
+  features!: LocalizedLabel[];
+
+  @Column({ name: 'gallery_categories', type: 'jsonb', default: () => "'[]'::jsonb" })
+  galleryCategories!: GalleryCategory[];
 
   @Column({ type: 'text', nullable: true })
   phone!: string | null;
@@ -75,7 +111,7 @@ export class CompanyEntity {
   @Column({ name: 'subscription_period', type: 'text', nullable: true })
   subscriptionPeriod!: SubscriptionPeriod | null;
 
-  @Column({ name: 'subscription_price', type: 'bigint', nullable: true, transformer: { to: (v?: number | null) => v, from: (v?: string | null) => v == null ? null : Number(v) } })
+  @Column({ name: 'subscription_price', type: 'bigint', nullable: true, transformer: numericTransformer })
   subscriptionPrice!: number | null;
 
   @Column({ type: 'text', default: 'pending' })

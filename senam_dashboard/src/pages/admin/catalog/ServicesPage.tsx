@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,9 +32,22 @@ import {
 import { ServiceForm } from '@/features/catalog/ServiceForm';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { useUiStore } from '@/store/ui.store';
-import { formatMoneyMinor } from '@/lib/formatters';
+import {
+  buildCategoryMap,
+  localizedName,
+  serviceCategoryLabel,
+} from '@/lib/catalog-labels';
+import { resolveMediaUrl } from '@/lib/media-url';
 
 const ALL = '__all__';
+
+function readUrl(s: Service, ...keys: string[]): string | null {
+  for (const k of keys) {
+    const v = s[k];
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  return null;
+}
 
 export default function AdminServicesPage() {
   const { t } = useTranslation('catalog');
@@ -50,11 +63,7 @@ export default function AdminServicesPage() {
   );
   const del = useDeleteService();
 
-  const categoryName = (id?: string) => {
-    if (!id) return '—';
-    const c = categories.find((x) => x.id === id);
-    return c?.nameEn ?? c?.nameAr ?? id;
-  };
+  const categoryById = useMemo(() => buildCategoryMap(categories), [categories]);
 
   function openCreate() {
     setEditing(null);
@@ -96,7 +105,7 @@ export default function AdminServicesPage() {
                 <SelectItem value={ALL}>{t('services.filter.allCategories')}</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.nameEn ?? c.nameAr ?? c.id}
+                    {localizedName(c, lang) ?? c.id}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -110,11 +119,11 @@ export default function AdminServicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>{t('table.icon')}</TableHead>
+                <TableHead>{t('table.image')}</TableHead>
                 <TableHead>{t('table.nameAr')}</TableHead>
                 <TableHead>{t('table.nameEn')}</TableHead>
                 <TableHead>{t('table.category')}</TableHead>
-                <TableHead>{t('table.price')}</TableHead>
-                <TableHead>{t('table.duration')}</TableHead>
                 <TableHead>{t('table.active')}</TableHead>
                 <TableHead className="text-end">{t('table.actions')}</TableHead>
               </TableRow>
@@ -135,15 +144,49 @@ export default function AdminServicesPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                services.map((s) => (
+                services.map((s) => {
+                  const nameAr =
+                    (s.nameAr as string | undefined) ??
+                    (s.name_ar as string | undefined);
+                  const nameEn =
+                    (s.nameEn as string | undefined) ??
+                    (s.name_en as string | undefined);
+                  const isActive =
+                    (s.active as boolean | undefined) ??
+                    (s.isActive as boolean | undefined) ??
+                    (s.is_active as boolean | undefined) ??
+                    false;
+                  const iconUrl = readUrl(s, 'iconKey', 'icon_key', 'iconUrl');
+                  const imageUrl = readUrl(s, 'imageKey', 'image_key', 'imageUrl');
+                  return (
                   <TableRow key={s.id}>
-                    <TableCell dir="rtl">{s.nameAr ?? '—'}</TableCell>
-                    <TableCell>{s.nameEn ?? '—'}</TableCell>
-                    <TableCell>{categoryName(s.categoryId)}</TableCell>
-                    <TableCell>{formatMoneyMinor(s.basePriceMinor ?? null, 'QAR', lang)}</TableCell>
-                    <TableCell>{s.durationMinutes ?? '—'}</TableCell>
                     <TableCell>
-                      {s.active ? (
+                      {iconUrl ? (
+                        <img
+                          src={resolveMediaUrl(iconUrl)}
+                          alt=""
+                          className="h-8 w-8 rounded object-cover"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {imageUrl ? (
+                        <img
+                          src={resolveMediaUrl(imageUrl)}
+                          alt=""
+                          className="h-10 w-16 rounded object-cover"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell dir="rtl">{nameAr ?? '—'}</TableCell>
+                    <TableCell>{nameEn ?? '—'}</TableCell>
+                    <TableCell>{serviceCategoryLabel(s, categoryById, lang)}</TableCell>
+                    <TableCell>
+                      {isActive ? (
                         <Check className="h-4 w-4 text-emerald-600" />
                       ) : (
                         <X className="h-4 w-4 text-muted-foreground" />
@@ -162,7 +205,8 @@ export default function AdminServicesPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

@@ -9,13 +9,13 @@ import {
   PresignUploadResult,
   PresignDownloadOptions,
 } from './object-storage.port.js';
+import { toStoredMediaPath } from '../../common/utils/media-url.util.js';
 
 /**
  * Dev/CI replacement for the S3 adapter that stores objects on the API server's
- * local filesystem. The "presigned" URLs point back at our own API
- * (`{LOCAL_STORAGE_PUBLIC_BASE_URL}/v1/uploads/raw/...`), which is served by
- * {@link LocalUploadsController}. This lets developers run the full upload
- * flow without MinIO/Docker/S3.
+ * local filesystem. Upload URLs use {@link publicBaseUrl}; persisted
+ * {@link PresignUploadResult.publicUrl} is a host-independent path
+ * (`/v1/uploads/raw/...`) so DB rows survive IP / host changes.
  */
 @Injectable()
 export class LocalFilesystemAdapter extends ObjectStoragePort {
@@ -31,6 +31,7 @@ export class LocalFilesystemAdapter extends ObjectStoragePort {
     this.publicBaseUrl = (
       config.get<string>('LOCAL_STORAGE_PUBLIC_BASE_URL') ||
       config.get<string>('API_PUBLIC_BASE_URL') ||
+      config.get<string>('APP_BASE_URL') ||
       'http://localhost:3000'
     ).replace(/\/+$/, '');
     this.signingSecret =
@@ -41,8 +42,6 @@ export class LocalFilesystemAdapter extends ObjectStoragePort {
 
   /** Where this adapter writes a given object key on disk. */
   resolvePath(key: string): string {
-    // Reject path traversal — keys are random uuids from the presign endpoint,
-    // but defence-in-depth here is cheap.
     const safe = key.replace(/\.\.+/g, '').replace(/^[/\\]+/, '');
     return path.join(this.rootDir, safe);
   }
@@ -75,12 +74,12 @@ export class LocalFilesystemAdapter extends ObjectStoragePort {
     return {
       uploadUrl,
       objectKey: options.key,
-      publicUrl: `${this.publicBaseUrl}/v1/uploads/raw/${encodeURI(options.key)}`,
+      publicUrl: toStoredMediaPath(options.key),
     };
   }
 
   async presignDownload(options: PresignDownloadOptions): Promise<string> {
-    return `${this.publicBaseUrl}/v1/uploads/raw/${encodeURI(options.key)}`;
+    return `${this.publicBaseUrl}${toStoredMediaPath(options.key)}`;
   }
 
   async writeFile(key: string, body: Buffer): Promise<void> {

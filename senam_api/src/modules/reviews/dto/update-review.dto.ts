@@ -5,6 +5,7 @@ import {
   IsArray,
   Min,
   Max,
+  Length,
 } from 'class-validator';
 
 export class UpdateReviewDto {
@@ -13,12 +14,6 @@ export class UpdateReviewDto {
   @Min(1)
   @Max(5)
   ratingCompany?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  ratingStaff?: number;
 
   @IsOptional()
   @IsInt()
@@ -34,6 +29,7 @@ export class UpdateReviewDto {
 
   @IsOptional()
   @IsString()
+  @Length(0, 2000)
   comment?: string;
 
   @IsOptional()

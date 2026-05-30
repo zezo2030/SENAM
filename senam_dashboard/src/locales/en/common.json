@@ -3,22 +3,24 @@
     "name": "SENAM Dashboard",
     "tagline": "Admin & Provider control center"
   },
+  "roles": {
+    "provider_owner": "Provider owner",
+    "super_admin": "Super admin",
+    "ops_admin": "Operations",
+    "finance_admin": "Finance",
+    "support_admin": "Support"
+  },
   "nav": {
     "overview": "Overview",
     "companies": "Companies",
     "users": "Users",
-    "orders": "Orders",
     "catalog": "Catalog",
     "categories": "Categories",
     "services": "Services",
-    "coupons": "Coupons",
     "banners": "Banners",
-    "settlements": "Settlements",
     "reports": "Reports",
     "audit": "Audit",
-    "staff": "Staff",
-    "financials": "Financials",
-    "profile": "Profile",
+    "profile": "Company page",
     "logout": "Log out"
   },
   "actions": {

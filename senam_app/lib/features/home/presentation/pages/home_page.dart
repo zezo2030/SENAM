@@ -1,15 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/config/media_url.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../../../account/presentation/pages/notifications_page.dart';
 import '../../../banners/domain/entities/banner.dart' as domain;
-import '../../../offers/domain/entities/offer.dart';
 import '../../../services/domain/entities/company.dart';
 import '../../../services/domain/entities/service_category.dart';
+import '../../../provider_application/presentation/pages/provider_application_page.dart';
 import '../../../services/presentation/pages/category_page.dart';
 import '../../../services/presentation/pages/company_details_page.dart';
+import '../../../services/presentation/pages/how_senam_works_page.dart';
 import '../cubit/home_cubit.dart';
 
 class HomePage extends StatelessWidget {
@@ -23,24 +26,6 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
-/// مشاريع منزلية — محتوى ثابت تزييني للواجهة.
-class _HomeProject {
-  final String name;
-  final String imagePath;
-  const _HomeProject(this.name, this.imagePath);
-}
-
-const _homeProjects = [
-  _HomeProject('صبغ', 'assets/images/home/project_paint.png'),
-  _HomeProject('جبس بورد', 'assets/images/home/project_gypsum.png'),
-  _HomeProject('مطابخ', 'assets/images/home/project_kitchen.png'),
-  _HomeProject('ترميم', 'assets/images/home/project_restoration.png'),
-  _HomeProject('أرضيات', 'assets/images/home/project_flooring.png'),
-  _HomeProject('تنسيق حدائق', 'assets/images/home/project_landscaping.png'),
-  _HomeProject('مظلات وسواتر', 'assets/images/home/project_pergola.png'),
-  _HomeProject('تشطيب داخلي', 'assets/images/home/project_finishing.png'),
-];
 
 class _HomeView extends StatelessWidget {
   const _HomeView();
@@ -62,29 +47,28 @@ class _HomeView extends StatelessWidget {
               );
             }
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
               children: [
                 const _TopBar(),
+                const SizedBox(height: 18),
+                const _SearchField(),
                 const SizedBox(height: 16),
-                _PromoBanner(banners: state.banners),
+                _HeroBanner(banners: state.banners),
                 const SizedBox(height: 22),
-                SectionHeader(title: 'خدمات سريعة', onSeeAll: () {}),
-                const SizedBox(height: 12),
-                _QuickServices(categories: state.categories),
-                const SizedBox(height: 22),
-                SectionHeader(title: 'مشاريع منزلية', onSeeAll: () {}),
-                const SizedBox(height: 12),
-                const _HomeProjectsGrid(),
-                const SizedBox(height: 22),
-                SectionHeader(title: 'شركات موثوقة', onSeeAll: () {}),
-                const SizedBox(height: 12),
-                _TrustedCompanies(
-                  companies: state.trustedCompanies,
-                  categories: state.categories,
+                const _SectionHeader(
+                  title: 'التصنيفات الرئيسية',
                 ),
+                const SizedBox(height: 14),
+                _CategoriesGrid(categories: state.categories),
                 const SizedBox(height: 22),
-                if (state.offers.isNotEmpty)
-                  _OfferBanner(offer: state.offers.first),
+                _SectionHeader(
+                  title: 'شركات مميزة',
+                  onSeeAll: () {},
+                ),
+                const SizedBox(height: 12),
+                _FeaturedCompanies(companies: state.trustedCompanies),
+                const SizedBox(height: 24),
+                const _JoinAsProviderCard(),
               ],
             );
           },
@@ -100,27 +84,41 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        CircleIconButton(
-          icon: Icons.notifications_outlined,
-          badgeCount: 3,
+        GestureDetector(
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (_) => const NotificationsPage()),
           ),
+          child: const Icon(Icons.notifications_outlined,
+              color: AppColors.textPrimary, size: 26),
         ),
         const Spacer(),
-        const SenamLogo(fontSize: 20),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SenamLogo(fontSize: 20),
+            SizedBox(height: 2),
+            Text(
+              'كل الخدمات. بنقة واحدة',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
         const Spacer(),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: const [
-            Icon(Icons.keyboard_arrow_down,
-                color: AppColors.textSecondary, size: 18),
             Text('الدوحة',
                 style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600)),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13)),
             SizedBox(width: 4),
             Icon(Icons.location_on, color: AppColors.gold, size: 18),
           ],
@@ -130,35 +128,98 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _PromoBanner extends StatefulWidget {
-  final List<domain.Banner> banners;
-  const _PromoBanner({required this.banners});
+class _SearchField extends StatelessWidget {
+  const _SearchField();
 
   @override
-  State<_PromoBanner> createState() => _PromoBannerState();
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search,
+                    color: AppColors.textMuted, size: 20),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: TextField(
+                    textAlign: TextAlign.start,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary, fontSize: 13),
+                    decoration: const InputDecoration(
+                      hintText: 'ابحث عن خدمة أو شركة...',
+                      hintStyle: TextStyle(
+                          color: AppColors.textMuted, fontSize: 13),
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.tune,
+              color: AppColors.gold, size: 20),
+        ),
+      ],
+    );
+  }
 }
 
-class _PromoSlide {
-  final String? imageUrl;
-  final String? imageAsset;
+/// بانر الهيرو — يستقبل البيانات من الباك (`GET /v1/banners`).
+/// لو ما وصلت بيانات يعرض شريحة افتراضية ثابتة بنفس التصميم.
+class _HeroBanner extends StatefulWidget {
+  final List<domain.Banner> banners;
+  const _HeroBanner({required this.banners});
 
-  const _PromoSlide({this.imageUrl, this.imageAsset});
+  @override
+  State<_HeroBanner> createState() => _HeroBannerState();
 }
 
-class _PromoBannerState extends State<_PromoBanner> {
+class _HeroBannerState extends State<_HeroBanner> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _fallbackSlides = <_PromoSlide>[
-    _PromoSlide(imageAsset: 'assets/images/home/promo_car_premium.png'),
-    _PromoSlide(imageAsset: 'assets/images/home/promo_wash_premium.png'),
-    _PromoSlide(imageAsset: 'assets/images/home/promo_home_premium.png'),
+  static const _fallback = <_HeroSlide>[
+    _HeroSlide(
+      titleAr: 'خدمات منزلية',
+      highlightAr: 'تجربة أسهل',
+      subtitleAr: 'شركات موثوقة. تصاميم مميزة',
+      imageAsset: 'assets/images/home/promo_home_premium.png',
+    ),
   ];
 
-  List<_PromoSlide> get _slides {
-    if (widget.banners.isEmpty) return _fallbackSlides;
+  List<_HeroSlide> get _slides {
+    if (widget.banners.isEmpty) return _fallback;
     return widget.banners
-        .map((b) => _PromoSlide(imageUrl: b.imageUrl))
+        .map(
+          (b) => _HeroSlide(
+            titleAr: b.titleAr,
+            highlightAr: '',
+            subtitleAr: b.subtitleAr ?? '',
+            imageUrl: b.imageUrl,
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -171,218 +232,353 @@ class _PromoBannerState extends State<_PromoBanner> {
   @override
   Widget build(BuildContext context) {
     final slides = _slides;
-    return Stack(
-      children: [
-        SizedBox(
-          height: 180,
-          child: PageView.builder(
+    return SizedBox(
+      height: 150,
+      child: Stack(
+        children: [
+          PageView.builder(
             controller: _controller,
             itemCount: slides.length,
             onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (_, i) {
-              final s = slides[i];
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: s.imageUrl != null
-                      ? Image.network(
-                          s.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, st) => const SizedBox(),
-                        )
-                      : Image.asset(
-                          s.imageAsset!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, st) => const SizedBox(),
+            itemBuilder: (_, i) => _HeroSlideView(slide: slides[i]),
+          ),
+          if (slides.length > 1)
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(slides.length, (i) {
+                  final active = i == _page;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: active ? 16 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? AppColors.gold
+                          : Colors.white.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroSlide {
+  final String titleAr;
+  final String highlightAr;
+  final String subtitleAr;
+  final String? imageUrl;
+  final String? imageAsset;
+  const _HeroSlide({
+    required this.titleAr,
+    required this.highlightAr,
+    required this.subtitleAr,
+    this.imageUrl,
+    this.imageAsset,
+  });
+}
+
+class _HeroSlideView extends StatelessWidget {
+  final _HeroSlide slide;
+  const _HeroSlideView({required this.slide});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const HowSenamWorksPage()),
+      ),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _image(),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.background.withValues(alpha: 0.92),
+                    AppColors.background.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (slide.titleAr.isNotEmpty)
+                    Text(
+                      slide.titleAr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  if (slide.highlightAr.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    ShaderMask(
+                      shaderCallback: (r) =>
+                          AppColors.goldGradient.createShader(r),
+                      child: Text(
+                        slide.highlightAr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
                         ),
-                ),
-              );
-            },
+                      ),
+                    ),
+                  ],
+                  if (slide.subtitleAr.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      slide.subtitleAr,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.goldGradient,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.arrow_back,
+                            size: 14, color: Color(0xFF1A1500)),
+                        SizedBox(width: 6),
+                        Text(
+                          'استكشف الآن',
+                          style: TextStyle(
+                            color: Color(0xFF1A1500),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _image() {
+    Widget fallback() => Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2A2418), Color(0xFF161410)],
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+            ),
+          ),
+        );
+    if (slide.imageUrl != null && slide.imageUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: resolveMediaUrl(slide.imageUrl!),
+        fit: BoxFit.cover,
+        errorWidget: (c, e, s) => fallback(),
+        placeholder: (c, url) => fallback(),
+      );
+    }
+    if (slide.imageAsset != null) {
+      return Image.asset(
+        slide.imageAsset!,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => fallback(),
+      );
+    }
+    return fallback();
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback? onSeeAll;
+  const _SectionHeader({required this.title, this.onSeeAll});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
           ),
         ),
-        Positioned(
-          bottom: 12,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(slides.length, (i) {
-              final active = i == _page;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: active ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: active ? AppColors.gold : Colors.grey.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              );
-            }),
+        const Spacer(),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: const Text(
+              'عرض الكل',
+              style: TextStyle(color: AppColors.gold, fontSize: 12),
+            ),
           ),
-        ),
       ],
     );
   }
 }
 
-class _QuickServices extends StatelessWidget {
+class _CategoriesGrid extends StatelessWidget {
   final List<ServiceCategory> categories;
-  const _QuickServices({required this.categories});
+  const _CategoriesGrid({required this.categories});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (_, i) {
-          final cat = categories[i];
-          return GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => CategoryPage(category: cat)),
-            ),
-            child: SizedBox(
-              width: 72,
-              child: Column(
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Icon(cat.icon,
-                        color: AppColors.gold, size: 28),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(cat.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _HomeProjectsGrid extends StatelessWidget {
-  const _HomeProjectsGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 4,
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 0.92,
-      children: _homeProjects.map((p) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                p.imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF353026), Color(0xFF18160F)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.85),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Text(p.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+      itemCount: categories.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.78,
+      ),
+      itemBuilder: (_, i) {
+        final cat = categories[i];
+        // الكارت الثالث (مشاريع منزلية) يظهر بحدّ ذهبي للتميّز
+        final highlighted = cat.id == 'home_projects';
+        return _CategoryCard(category: cat, highlighted: highlighted);
+      },
     );
   }
 }
 
-class _TrustedCompanies extends StatelessWidget {
-  final List<Company> companies;
-  final List<ServiceCategory> categories;
-  const _TrustedCompanies(
-      {required this.companies, required this.categories});
-
-  String _categoryName(String id) {
-    for (final c in categories) {
-      if (c.id == id) return c.name;
-    }
-    return 'خدمات';
-  }
+class _CategoryCard extends StatelessWidget {
+  final ServiceCategory category;
+  final bool highlighted;
+  const _CategoryCard({
+    required this.category,
+    this.highlighted = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 210,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: companies.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
-        itemBuilder: (_, i) => _TrustedCompanyCard(
-          company: companies[i],
-          categoryName: _categoryName(companies[i].categoryId),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CategoryPage(category: category)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: highlighted ? AppColors.gold : AppColors.border,
+            width: highlighted ? 1.4 : 1,
+          ),
+          boxShadow: highlighted
+              ? [
+                  BoxShadow(
+                    color: AppColors.gold.withValues(alpha: 0.25),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(category.icon,
+                color: AppColors.gold, size: 30),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                category.name,
+                maxLines: 2,
+                overflow: TextOverflow.visible,
+                softWrap: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _TrustedCompanyCard extends StatelessWidget {
-  final Company company;
-  final String categoryName;
-  const _TrustedCompanyCard(
-      {required this.company, required this.categoryName});
+class _FeaturedCompanies extends StatelessWidget {
+  final List<Company> companies;
+  const _FeaturedCompanies({required this.companies});
 
   @override
   Widget build(BuildContext context) {
+    if (companies.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 190,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: companies.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (_, i) => _FeaturedCard(company: companies[i]),
+      ),
+    );
+  }
+}
+
+class _FeaturedCard extends StatelessWidget {
+  final Company company;
+  const _FeaturedCard({required this.company});
+
+  @override
+  Widget build(BuildContext context) {
+    final logoUrl = resolveMediaUrl(company.logoUrl);
+    final coverUrl = resolveMediaUrl(company.coverPhoto);
+
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -391,8 +587,6 @@ class _TrustedCompanyCard extends StatelessWidget {
       ),
       child: Container(
         width: 150,
-        height: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
@@ -401,127 +595,297 @@ class _TrustedCompanyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TagPill(
-                  text: 'موثوق',
-                  icon: Icons.verified,
-                  color: AppColors.gold),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16)),
+                  child: Container(
+                    height: 100,
+                    color: AppColors.surfaceLight,
+                    child: coverUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: coverUrl,
+                            width: double.infinity,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorWidget: (c, e, s) =>
+                                _coverFallback(),
+                            placeholder: (c, url) =>
+                                _coverFallback(),
+                          )
+                        : _coverFallback(),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.08),
+                          Colors.black.withValues(alpha: 0.22),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Center(
+                    child: _companyLogo(logoUrl),
+                  ),
+                ),
+                PositionedDirectional(
+                  top: 6,
+                  start: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            color: AppColors.gold, size: 12),
+                        const SizedBox(width: 2),
+                        Text(
+                          company.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CompanyLogo(
-                      label: company.logoLabel,
-                      color: company.logoColor,
-                      size: 44),
-                  const SizedBox(height: 8),
-                  Text(company.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: AppColors.textPrimary)),
+                  Text(
+                    company.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    company.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  RatingBadge(
-                      rating: company.rating, count: company.reviewsCount),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: AppColors.textMuted, size: 11),
+                      const SizedBox(width: 2),
+                      Text(
+                        company.city,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.border),
-            const SizedBox(height: 6),
-            Text(categoryName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textSecondary)),
-            const SizedBox(height: 2),
-            Text('بدء من ${company.startPrice} ر.ق',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: AppColors.gold,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12)),
           ],
         ),
       ),
     );
   }
+
+  Widget _companyLogo(String logoUrl) {
+    const size = 58.0;
+    return Container(
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: logoUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: logoUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorWidget: (c, e, s) => _logoFallback(),
+                placeholder: (c, url) => _logoFallback(),
+              )
+            : _logoFallback(),
+      ),
+    );
+  }
+
+  Widget _coverFallback() => Container(
+        color: AppColors.surfaceLight,
+      );
+
+  Widget _logoFallback() => CompanyLogo(
+        label: company.logoLabel,
+        color: company.logoColor,
+        size: 52,
+      );
 }
 
-class _OfferBanner extends StatelessWidget {
-  final Offer offer;
-  const _OfferBanner({required this.offer});
+/// كارد دعوة الشركات للانضمام كمزوّد خدمة — يظهر أسفل الصفحة الرئيسية.
+class _JoinAsProviderCard extends StatelessWidget {
+  const _JoinAsProviderCard();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2A2418), Color(0xFF161410)],
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-        ),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ProviderApplicationPage()),
       ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Image.asset(
-              'assets/images/home/special_offer.png',
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-              errorBuilder: (c, e, s) => Container(
-                width: 72,
-                height: 72,
-                color: AppColors.gold.withValues(alpha: 0.15),
-                child: const Icon(Icons.card_giftcard,
-                    color: AppColors.gold, size: 40),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: AppColors.cardGradient,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.gold.withValues(alpha: 0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // وهج ذهبي خفيف في الزاوية
+            PositionedDirectional(
+              top: -30,
+              end: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.gold.withValues(alpha: 0.18),
+                      AppColors.gold.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(offer.title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 17,
-                        color: AppColors.gold)),
-                const SizedBox(height: 4),
-                Text(offer.subtitle,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textPrimary)),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.goldGradient,
-                    borderRadius: BorderRadius.circular(10),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.goldGradient,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.gold.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.storefront_rounded,
+                      color: Color(0xFF1A1500),
+                      size: 28,
+                    ),
                   ),
-                  child: Text('استخدم الكود: ${offer.code}',
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A1500))),
-                ),
-              ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'هل تملك شركة خدمات؟',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'انضمّ إلى سِنام وقدّم خدماتك لآلاف العملاء',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11.5,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.goldGradient,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Text(
+                                'قدّم الآن',
+                                style: TextStyle(
+                                  color: Color(0xFF1A1500),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Icon(Icons.arrow_back,
+                                  size: 14, color: Color(0xFF1A1500)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

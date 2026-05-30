@@ -1,16 +1,14 @@
 import {
   IsString,
   IsOptional,
-  IsUUID,
-  IsInt,
   IsBoolean,
-  Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { IsUuidLoose } from '../../../common/decorators/is-uuid-loose.decorator.js';
 export class CreateServiceDto {
   @ApiProperty({ description: 'Category UUID' })
-  @IsUUID()
+  @IsUuidLoose()
   categoryId!: string;
 
   @ApiProperty({ description: 'URL-safe slug' })
@@ -31,11 +29,20 @@ export class CreateServiceDto {
   @IsString()
   descriptionAr?: string;
 
-  @ApiPropertyOptional({ description: 'Base duration in minutes', minimum: 1 })
+  @ApiPropertyOptional({ description: 'English description' })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  baseDurationMinutes?: number;
+  @IsString()
+  descriptionEn?: string;
+
+  @ApiPropertyOptional({ description: 'Uploaded icon object key' })
+  @IsOptional()
+  @IsString()
+  iconKey?: string;
+
+  @ApiPropertyOptional({ description: 'Uploaded banner image object key' })
+  @IsOptional()
+  @IsString()
+  imageKey?: string;
 
   @ApiPropertyOptional({ description: 'Whether service is active', default: true })
   @IsOptional()

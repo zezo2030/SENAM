@@ -1,12 +1,19 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { CompanyEntity } from './entities/company.entity.js';
+import { CompanyEntity, LocalizedLabel } from './entities/company.entity.js';
 import { CompanyServiceEntity } from './entities/company-service.entity.js';
+import { CompanyGalleryPhotoEntity } from './entities/company-gallery-photo.entity.js';
 import { ListCompaniesQueryDto } from './dto/list-companies-query.dto.js';
 import { UpdateProviderProfileDto } from './dto/update-provider-profile.dto.js';
 import { RegisterCompanyApplicationDto } from './dto/register-company-application.dto.js';
+import { toStoredMediaPath } from '../../common/utils/media-url.util.js';
 
 const PASSWORD_BCRYPT_ROUNDS = 12;
 
@@ -25,6 +32,7 @@ export interface CompanyApplicationStatus {
 }
 
 export interface CompanyApplicationDetail {
+  id: string;
   companyId: string;
   status: 'pending' | 'active' | 'suspended';
   legalName: string;
@@ -32,6 +40,8 @@ export interface CompanyApplicationDetail {
   slug: string;
   description: string | null;
   logoObjectKey: string | null;
+  coverObjectKey: string | null;
+  features: LocalizedLabel[];
   categoryId: string | null;
   hasCommercialRegistration: boolean;
   commercialRegistrationNo: string | null;
@@ -59,6 +69,77 @@ export interface CompanyApplicationDetail {
   }>;
   documents: Array<{ kind: string; objectKey: string }>;
   portfolioPhotos: Array<{ objectKey: string; sortOrder: number }>;
+  owners: Array<{
+    id: string;
+    email: string;
+    displayName: string | null;
+    role: 'owner' | 'staff';
+    status: 'active' | 'suspended';
+  }>;
+}
+
+export interface CompanyDetail {
+  id: string;
+  displayName: string;
+  legalName: string;
+  slug: string;
+  description: string | null;
+  status: 'pending' | 'active' | 'suspended';
+  categoryId: string | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  ratingAvg: number;
+  ratingCount: number;
+  contacts: {
+    whatsappLink: string | null;
+    phone: string | null;
+    landline: string | null;
+    instagram: string | null;
+    email: string | null;
+    website: string | null;
+  };
+  location: {
+    region: string | null;
+    city: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    mapUrl: string | null;
+  };
+  features: Array<{ ar: string; en: string; icon?: string }>;
+  galleryCategories: Array<{ id: string; ar: string; en: string; sortOrder: number }>;
+  gallery: Array<{
+    categoryId: string | null;
+    photos: Array<{
+      id: string;
+      url: string;
+      captionAr: string | null;
+      captionEn: string | null;
+      sortOrder: number;
+    }>;
+  }>;
+}
+
+export interface ProviderServiceSelection {
+  selectedServiceIds: string[];
+  categories: Array<{
+    id: string;
+    slug: string;
+    nameAr: string;
+    nameEn: string | null;
+    sortOrder: number;
+    services: Array<{
+      id: string;
+      categoryId: string;
+      slug: string;
+      nameAr: string;
+      nameEn: string | null;
+      descriptionAr: string | null;
+      descriptionEn: string | null;
+      iconKey: string | null;
+      imageKey: string | null;
+      selected: boolean;
+    }>;
+  }>;
 }
 
 @Injectable()
@@ -68,6 +149,8 @@ export class CompaniesService {
     private readonly companyRepo: Repository<CompanyEntity>,
     @InjectRepository(CompanyServiceEntity)
     private readonly companyServiceRepo: Repository<CompanyServiceEntity>,
+    @InjectRepository(CompanyGalleryPhotoEntity)
+    private readonly galleryPhotoRepo: Repository<CompanyGalleryPhotoEntity>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -226,12 +309,16 @@ export class CompaniesService {
       throw new NotFoundException('application_not_found');
     }
 
+    // Read the *live* services the provider currently offers (edited from the
+    // provider dashboard → company_services), not the registration snapshot
+    // (company_application_services), so the admin sees the up-to-date set.
     const services = (await this.dataSource.query(
       `SELECT s.id, s.slug, s.name_ar AS "nameAr", s.name_en AS "nameEn",
               s.category_id AS "categoryId"
-         FROM company_application_services cas
-         JOIN services s ON s.id = cas.service_id
-        WHERE cas.company_id = $1
+         FROM company_services cs
+         JOIN services s ON s.id = cs.service_id
+        WHERE cs.company_id = $1
+          AND cs.is_active = true
         ORDER BY s.name_ar ASC`,
       [companyId],
     )) as CompanyApplicationDetail['services'];
@@ -243,15 +330,26 @@ export class CompaniesService {
       [companyId],
     )) as CompanyApplicationDetail['documents'];
 
+    // Live gallery photos managed from the provider dashboard, not the
+    // registration-time portfolio snapshot (company_portfolio_photos).
     const portfolioPhotos = (await this.dataSource.query(
       `SELECT object_key AS "objectKey", sort_order AS "sortOrder"
-         FROM company_portfolio_photos
+         FROM company_gallery_photos
         WHERE company_id = $1
         ORDER BY sort_order ASC, created_at ASC`,
       [companyId],
     )) as CompanyApplicationDetail['portfolioPhotos'];
 
+    const owners = (await this.dataSource.query(
+      `SELECT id, email, display_name AS "displayName", role, status
+         FROM company_users
+        WHERE company_id = $1
+        ORDER BY (role = 'owner') DESC, created_at ASC`,
+      [companyId],
+    )) as CompanyApplicationDetail['owners'];
+
     return {
+      id: company.id,
       companyId: company.id,
       status: company.status,
       legalName: company.legalName,
@@ -259,6 +357,8 @@ export class CompaniesService {
       slug: company.slug,
       description: company.description,
       logoObjectKey: company.logoObjectKey,
+      coverObjectKey: company.coverObjectKey,
+      features: company.features ?? [],
       categoryId: company.categoryId,
       hasCommercialRegistration: company.hasCommercialRegistration,
       commercialRegistrationNo: company.commercialRegistrationNo,
@@ -280,10 +380,13 @@ export class CompaniesService {
       services,
       documents,
       portfolioPhotos,
+      owners,
     };
   }
 
-  async findAll(query: ListCompaniesQueryDto): Promise<CompanyEntity[]> {
+  async findAll(
+    query: ListCompaniesQueryDto,
+  ): Promise<Array<CompanyEntity & { subServiceIds: string[] }>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const offset = (page - 1) * limit;
@@ -291,6 +394,15 @@ export class CompaniesService {
     const qb = this.companyRepo
       .createQueryBuilder('c')
       .where("c.status = 'active'");
+
+    if (query.serviceId) {
+      qb.innerJoin(
+        'company_services',
+        'css',
+        'css.company_id = c.id AND css.is_active = true AND css.service_id = :serviceId',
+        { serviceId: query.serviceId },
+      );
+    }
 
     if (query.categoryId) {
       qb.innerJoin(
@@ -325,17 +437,47 @@ export class CompaniesService {
       qb.orderBy('c.display_name', 'ASC');
     }
 
-    return qb.limit(limit).offset(offset).getMany();
+    const companies = await qb.limit(limit).offset(offset).getMany();
+    if (companies.length === 0) {
+      return companies as Array<CompanyEntity & { subServiceIds: string[] }>;
+    }
+
+    // Attach the catalog service IDs each company actively offers, so the
+    // mobile app can compute per-service company counts client-side.
+    const ids = companies.map((c) => c.id);
+    const serviceRows = (await this.dataSource.query(
+      `SELECT company_id AS "companyId", service_id AS "serviceId"
+         FROM company_services
+        WHERE is_active = true
+          AND company_id = ANY($1::uuid[])`,
+      [ids],
+    )) as Array<{ companyId: string; serviceId: string }>;
+
+    const byCompany = new Map<string, string[]>();
+    for (const row of serviceRows) {
+      const list = byCompany.get(row.companyId) ?? [];
+      list.push(row.serviceId);
+      byCompany.set(row.companyId, list);
+    }
+
+    return companies.map((c) =>
+      Object.assign(c, { subServiceIds: byCompany.get(c.id) ?? [] }),
+    );
   }
 
-  async findOne(id: string): Promise<CompanyEntity> {
+  async findOne(id: string): Promise<CompanyDetail> {
     const company = await this.companyRepo.findOne({
       where: { id, status: 'active' },
     });
     if (!company) {
       throw new NotFoundException(`Company ${id} not found`);
     }
-    return company;
+    return this.toDetail(company);
+  }
+
+  /** Full company detail including gallery/categories/features for the mobile page. */
+  async getCompanyDetail(id: string): Promise<CompanyDetail> {
+    return this.findOne(id);
   }
 
   async findServices(companyId: string): Promise<CompanyServiceEntity[]> {
@@ -346,29 +488,273 @@ export class CompaniesService {
     });
   }
 
+  async getProviderServiceSelection(
+    companyId: string,
+  ): Promise<ProviderServiceSelection> {
+    await this.ensureCompanyExists(companyId);
+
+    const rows = (await this.dataSource.query(
+      `SELECT
+          c.id         AS "categoryId",
+          c.slug       AS "categorySlug",
+          c.name_ar    AS "categoryNameAr",
+          c.name_en    AS "categoryNameEn",
+          c.sort_order AS "categorySortOrder",
+          s.id         AS "serviceId",
+          s.slug       AS "serviceSlug",
+          s.name_ar    AS "serviceNameAr",
+          s.name_en    AS "serviceNameEn",
+          s.description_ar AS "serviceDescriptionAr",
+          s.description_en AS "serviceDescriptionEn",
+          s.icon_key   AS "serviceIconKey",
+          s.image_key  AS "serviceImageKey",
+          cs.id        AS "companyServiceId"
+        FROM categories c
+        LEFT JOIN services s
+          ON s.category_id = c.id
+         AND s.is_active = true
+        LEFT JOIN company_services cs
+          ON cs.service_id = s.id
+         AND cs.company_id = $1
+         AND cs.is_active = true
+       WHERE c.is_active = true
+       ORDER BY c.sort_order ASC, c.name_ar ASC, s.name_ar ASC`,
+      [companyId],
+    )) as Array<{
+      categoryId: string;
+      categorySlug: string;
+      categoryNameAr: string;
+      categoryNameEn: string | null;
+      categorySortOrder: number;
+      serviceId: string | null;
+      serviceSlug: string | null;
+      serviceNameAr: string | null;
+      serviceNameEn: string | null;
+      serviceDescriptionAr: string | null;
+      serviceDescriptionEn: string | null;
+      serviceIconKey: string | null;
+      serviceImageKey: string | null;
+      companyServiceId: string | null;
+    }>;
+
+    const categories = new Map<string, ProviderServiceSelection['categories'][number]>();
+    const selectedServiceIds = new Set<string>();
+
+    for (const row of rows) {
+      let category = categories.get(row.categoryId);
+      if (!category) {
+        category = {
+          id: row.categoryId,
+          slug: row.categorySlug,
+          nameAr: row.categoryNameAr,
+          nameEn: row.categoryNameEn,
+          sortOrder: row.categorySortOrder,
+          services: [],
+        };
+        categories.set(row.categoryId, category);
+      }
+
+      if (!row.serviceId) continue;
+
+      const selected = Boolean(row.companyServiceId);
+      if (selected) selectedServiceIds.add(row.serviceId);
+
+      category.services.push({
+        id: row.serviceId,
+        categoryId: row.categoryId,
+        slug: row.serviceSlug ?? '',
+        nameAr: row.serviceNameAr ?? '',
+        nameEn: row.serviceNameEn,
+        descriptionAr: row.serviceDescriptionAr,
+        descriptionEn: row.serviceDescriptionEn,
+        iconKey: row.serviceIconKey,
+        imageKey: row.serviceImageKey,
+        selected,
+      });
+    }
+
+    return {
+      selectedServiceIds: [...selectedServiceIds],
+      categories: [...categories.values()],
+    };
+  }
+
+  async updateProviderServices(
+    companyId: string,
+    serviceIds: string[],
+  ): Promise<ProviderServiceSelection> {
+    await this.ensureCompanyExists(companyId);
+
+    const uniqueServiceIds = [...new Set(serviceIds.map((id) => id.trim()))];
+    if (uniqueServiceIds.length) {
+      const activeRows = (await this.dataSource.query(
+        `SELECT id FROM services WHERE is_active = true AND id = ANY($1::uuid[])`,
+        [uniqueServiceIds],
+      )) as Array<{ id: string }>;
+      if (activeRows.length !== uniqueServiceIds.length) {
+        throw new BadRequestException('invalid_service_ids');
+      }
+    }
+
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      if (uniqueServiceIds.length) {
+        await qr.query(
+          `DELETE FROM company_services
+            WHERE company_id = $1
+              AND NOT (service_id = ANY($2::uuid[]))`,
+          [companyId, uniqueServiceIds],
+        );
+
+        for (const serviceId of uniqueServiceIds) {
+          await qr.query(
+            `INSERT INTO company_services (company_id, service_id, is_active)
+             VALUES ($1, $2, true)
+             ON CONFLICT (company_id, service_id)
+             DO UPDATE SET is_active = true`,
+            [companyId, serviceId],
+          );
+        }
+      } else {
+        await qr.query(`DELETE FROM company_services WHERE company_id = $1`, [
+          companyId,
+        ]);
+      }
+
+      await qr.commitTransaction();
+    } catch (err) {
+      await qr.rollbackTransaction();
+      throw err;
+    } finally {
+      await qr.release();
+    }
+
+    return this.getProviderServiceSelection(companyId);
+  }
+
   async findById(id: string): Promise<CompanyEntity | null> {
     return this.companyRepo.findOne({ where: { id } });
+  }
+
+  private async ensureCompanyExists(id: string): Promise<void> {
+    const exists = await this.companyRepo.exists({ where: { id } });
+    if (!exists) throw new NotFoundException(`Company ${id} not found`);
+  }
+
+  async getMyCompanyDetail(id: string): Promise<CompanyDetail> {
+    const company = await this.companyRepo.findOne({ where: { id } });
+    if (!company) throw new NotFoundException(`Company ${id} not found`);
+    return this.toDetail(company);
   }
 
   async updateProviderProfile(
     id: string,
     dto: UpdateProviderProfileDto,
-  ): Promise<CompanyEntity> {
+  ): Promise<CompanyDetail> {
     const company = await this.companyRepo.findOne({ where: { id } });
-    if (!company) {
-      throw new NotFoundException(`Company ${id} not found`);
+    if (!company) throw new NotFoundException(`Company ${id} not found`);
+
+    if (dto.displayName !== undefined) company.displayName = dto.displayName;
+    if (dto.description !== undefined) company.description = dto.description;
+    if (dto.phone !== undefined) company.phone = dto.phone;
+    if (dto.landline !== undefined) company.landline = dto.landline;
+    if (dto.whatsappLink !== undefined) company.whatsappLink = dto.whatsappLink;
+    if (dto.instagram !== undefined) company.instagram = dto.instagram;
+    if (dto.website !== undefined) company.website = dto.website;
+    if (dto.email !== undefined) company.email = dto.email?.toLowerCase() ?? null;
+    if (dto.city !== undefined) company.city = dto.city;
+    if (dto.region !== undefined) company.region = dto.region;
+    if (dto.latitude !== undefined) company.latitude = dto.latitude;
+    if (dto.longitude !== undefined) company.longitude = dto.longitude;
+    if (dto.mapUrl !== undefined) company.mapUrl = dto.mapUrl;
+    if (dto.features !== undefined) company.features = dto.features;
+
+    const saved = await this.companyRepo.save(company);
+    return this.toDetail(saved);
+  }
+
+  async setLogo(id: string, objectKey: string): Promise<CompanyDetail> {
+    const company = await this.companyRepo.findOne({ where: { id } });
+    if (!company) throw new NotFoundException(`Company ${id} not found`);
+    company.logoObjectKey = toStoredMediaPath(objectKey);
+    const saved = await this.companyRepo.save(company);
+    return this.toDetail(saved);
+  }
+
+  async setCover(id: string, objectKey: string): Promise<CompanyDetail> {
+    const company = await this.companyRepo.findOne({ where: { id } });
+    if (!company) throw new NotFoundException(`Company ${id} not found`);
+    company.coverObjectKey = toStoredMediaPath(objectKey);
+    const saved = await this.companyRepo.save(company);
+    return this.toDetail(saved);
+  }
+
+  /** Build the public/provider-facing company detail payload. */
+  private async toDetail(company: CompanyEntity): Promise<CompanyDetail> {
+    const photos = await this.galleryPhotoRepo.find({
+      where: { companyId: company.id },
+      order: { sortOrder: 'ASC', createdAt: 'ASC' },
+    });
+
+    const galleryByCat = new Map<string | null, CompanyDetail['gallery'][number]['photos']>();
+    for (const p of photos) {
+      const list = galleryByCat.get(p.categoryId) ?? [];
+      list.push({
+        id: p.id,
+        url: p.objectKey ? toStoredMediaPath(p.objectKey) : '',
+        captionAr: p.captionAr,
+        captionEn: p.captionEn,
+        sortOrder: p.sortOrder,
+      });
+      galleryByCat.set(p.categoryId, list);
     }
 
-    if (dto.displayName !== undefined) {
-      company.displayName = dto.displayName;
-    }
-    if (dto.description !== undefined) {
-      company.description = dto.description;
-    }
-    if (dto.phone !== undefined) {
-      company.phone = dto.phone;
+    const cats = [...(company.galleryCategories ?? [])].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+
+    const gallery: CompanyDetail['gallery'] = cats.map((c) => ({
+      categoryId: c.id,
+      photos: galleryByCat.get(c.id) ?? [],
+    }));
+    const uncategorized = galleryByCat.get(null);
+    if (uncategorized && uncategorized.length) {
+      gallery.push({ categoryId: null, photos: uncategorized });
     }
 
-    return this.companyRepo.save(company);
+    return {
+      id: company.id,
+      displayName: company.displayName,
+      legalName: company.legalName,
+      slug: company.slug,
+      description: company.description,
+      status: company.status,
+      categoryId: company.categoryId,
+      logoUrl: company.logoObjectKey ? toStoredMediaPath(company.logoObjectKey) : null,
+      coverUrl: company.coverObjectKey ? toStoredMediaPath(company.coverObjectKey) : null,
+      ratingAvg: Number(company.ratingAvg ?? 0),
+      ratingCount: company.ratingCount ?? 0,
+      contacts: {
+        whatsappLink: company.whatsappLink,
+        phone: company.phone,
+        landline: company.landline,
+        instagram: company.instagram,
+        email: company.email,
+        website: company.website,
+      },
+      location: {
+        region: company.region,
+        city: company.city,
+        latitude: company.latitude,
+        longitude: company.longitude,
+        mapUrl: company.mapUrl,
+      },
+      features: company.features ?? [],
+      galleryCategories: cats,
+      gallery,
+    };
   }
 }

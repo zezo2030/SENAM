@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MoreHorizontal, Check, Ban, Percent, Building2, Eye } from 'lucide-react';
+import { MoreHorizontal, Check, Ban, Building2, Eye } from 'lucide-react';
 
 import {
   Table,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
@@ -24,10 +25,10 @@ import {
 import { useAdminCompanies, type AdminCompany } from '@/api/admin-companies.api';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { useUiStore } from '@/store/ui.store';
-import { formatBps, formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { ApproveDialog } from '@/features/companies/ApproveDialog';
 import { SuspendDialog } from '@/features/companies/SuspendDialog';
-import { CommissionDialog } from '@/features/companies/CommissionDialog';
 import type { CompanyStatus } from '@/types/domain';
 
 type StatusFilter = CompanyStatus | 'all';
@@ -44,12 +45,12 @@ export default function AdminCompaniesListPage() {
   const lang = useUiStore((s) => s.lang);
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [selected, setSelected] = useState<AdminCompany | null>(null);
-  const [dialog, setDialog] = useState<'approve' | 'suspend' | 'commission' | null>(null);
+  const [dialog, setDialog] = useState<'approve' | 'suspend' | null>(null);
 
   const { data, isPending } = useAdminCompanies({ status: filter });
   const companies = useMemo(() => data?.data ?? [], [data]);
 
-  function open(action: 'approve' | 'suspend' | 'commission', company: AdminCompany) {
+  function open(action: 'approve' | 'suspend', company: AdminCompany) {
     setSelected(company);
     setDialog(action);
   }
@@ -101,7 +102,6 @@ export default function AdminCompaniesListPage() {
             <TableRow style={{ borderColor: 'hsl(var(--border)/0.4)', background: 'hsl(var(--muted)/0.3)' }}>
               <TableHead className="font-semibold text-foreground/80">{t('companies.name')}</TableHead>
               <TableHead className="font-semibold text-foreground/80">{t('companies.status')}</TableHead>
-              <TableHead className="font-semibold text-foreground/80">{t('companies.commission')}</TableHead>
               <TableHead className="font-semibold text-foreground/80">{t('companies.rating')}</TableHead>
               <TableHead className="font-semibold text-foreground/80">{t('companies.createdAt')}</TableHead>
               <TableHead className="text-end font-semibold text-foreground/80">{t('companies.actions')}</TableHead>
@@ -111,12 +111,12 @@ export default function AdminCompaniesListPage() {
             {isPending ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i} style={{ borderColor: 'hsl(var(--border)/0.3)' }}>
-                  <TableCell colSpan={6}><Skeleton className="h-6 w-full" /></TableCell>
+                  <TableCell colSpan={5}><Skeleton className="h-6 w-full" /></TableCell>
                 </TableRow>
               ))
             ) : companies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-16 text-center">
+                <TableCell colSpan={5} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Building2 className="h-10 w-10 opacity-30" />
                     <p>{t('companies.empty')}</p>
@@ -126,29 +126,40 @@ export default function AdminCompaniesListPage() {
             ) : (
               companies.map((c) => {
                 const status = String(c.status);
+                const displayName = c.displayName ?? c.legalName ?? c.id;
+                const logoUrl = c.logoObjectKey
+                  ? resolveMediaUrl(c.logoObjectKey)
+                  : '';
                 return (
                   <TableRow key={c.id} className="transition-colors" style={{ borderColor: 'hsl(var(--border)/0.3)' }}>
                     <TableCell>
                       <Link to={`/admin/companies/${c.id}`} className="flex items-center gap-3 hover:underline">
-                        <div
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold text-white"
-                          style={{ background: 'linear-gradient(135deg, hsl(220,80%,56%), hsl(262,83%,58%))' }}
-                        >
-                          {(c.displayName ?? c.legalName ?? '?')[0].toUpperCase()}
-                        </div>
+                        <Avatar className="h-8 w-8 shrink-0 rounded-lg border border-border/40">
+                          {logoUrl ? (
+                            <AvatarImage
+                              src={logoUrl}
+                              alt={displayName}
+                              className="object-cover"
+                            />
+                          ) : null}
+                          <AvatarFallback
+                            className="rounded-lg text-xs font-bold text-white"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, hsl(220,80%,56%), hsl(262,83%,58%))',
+                            }}
+                          >
+                            {(displayName[0] ?? '?').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
-                          <div className="font-medium">{c.displayName ?? c.legalName ?? c.id}</div>
+                          <div className="font-medium">{displayName}</div>
                           {c.slug && <div className="text-xs text-muted-foreground">{c.slug}</div>}
                         </div>
                       </Link>
                     </TableCell>
                     <TableCell>
                       <StatusBadge kind="company" value={status} label={t(`companies.status.${status}`, status)} />
-                    </TableCell>
-                    <TableCell>
-                      <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {formatBps(c.commissionBps ?? null)}
-                      </span>
                     </TableCell>
                     <TableCell>
                       {c.ratingAvg ? (
@@ -188,10 +199,6 @@ export default function AdminCompaniesListPage() {
                             <Ban className="me-2 h-4 w-4 text-amber-500" />
                             {t('companies.suspend.confirm')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => open('commission', c)}>
-                            <Percent className="me-2 h-4 w-4 text-blue-500" />
-                            {t('companies.commission.title')}
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -211,11 +218,6 @@ export default function AdminCompaniesListPage() {
       <SuspendDialog
         company={selected}
         open={dialog === 'suspend'}
-        onOpenChange={(o) => !o && setDialog(null)}
-      />
-      <CommissionDialog
-        company={selected}
-        open={dialog === 'commission'}
         onOpenChange={(o) => !o && setDialog(null)}
       />
     </div>

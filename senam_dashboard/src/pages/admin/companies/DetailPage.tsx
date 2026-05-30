@@ -6,17 +6,18 @@ import {
   Building2,
   Check,
   Ban,
-  Percent,
   Globe,
   Phone,
   Mail,
-  Instagram,
+  AtSign,
   MapPin,
   Image as ImageIcon,
   FileText,
   Tag,
   Crown,
   Sparkles,
+  KeyRound,
+  User,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,18 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { useAdminCompanyDetail } from '@/api/admin-companies.api';
 import { ApproveDialog } from '@/features/companies/ApproveDialog';
 import { SuspendDialog } from '@/features/companies/SuspendDialog';
-import { CommissionDialog } from '@/features/companies/CommissionDialog';
-import { formatBps, formatDate } from '@/lib/formatters';
+import { ResetPasswordDialog } from '@/features/companies/ResetPasswordDialog';
+import { formatDate } from '@/lib/formatters';
+import { resolveMediaUrl } from '@/lib/media-url';
+import { getFeatureIcon } from '@/lib/feature-icons';
 import { useUiStore } from '@/store/ui.store';
+
+/** Render a value, falling back to an em-dash for null/undefined/blank. */
+function orDash(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) return '—';
+  const s = String(value).trim();
+  return s.length ? s : '—';
+}
 
 const PLAN_LABEL: Record<string, string> = {
   basic: 'Basic',
@@ -52,9 +62,9 @@ export default function AdminCompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation('admin');
   const lang = useUiStore((s) => s.lang);
-  const [dialog, setDialog] = useState<'approve' | 'suspend' | 'commission' | null>(
-    null,
-  );
+  const [dialog, setDialog] = useState<
+    'approve' | 'suspend' | 'resetPassword' | null
+  >(null);
 
   const { data, isPending } = useAdminCompanyDetail(id);
 
@@ -80,6 +90,9 @@ export default function AdminCompanyDetailPage() {
   const photos = data.portfolioPhotos ?? [];
   const services = data.services ?? [];
   const docs = data.documents ?? [];
+  const owners = data.owners ?? [];
+  const features = data.features ?? [];
+  const logoUrl = data.logoObjectKey ? resolveMediaUrl(data.logoObjectKey) : '';
 
   return (
     <div className="space-y-6">
@@ -91,15 +104,23 @@ export default function AdminCompanyDetailPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl"
-            style={{
-              background:
-                'linear-gradient(135deg, hsl(220,80%,56%), hsl(262,83%,58%))',
-            }}
-          >
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={data.displayName ?? data.legalName ?? ''}
+              className="h-12 w-12 rounded-2xl border object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl"
+              style={{
+                background:
+                  'linear-gradient(135deg, hsl(220,80%,56%), hsl(262,83%,58%))',
+              }}
+            >
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+          )}
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               {data.displayName ?? data.legalName ?? data.id}
@@ -141,10 +162,11 @@ export default function AdminCompanyDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setDialog('commission')}
+            disabled={owners.filter((o) => o.role === 'owner').length === 0}
+            onClick={() => setDialog('resetPassword')}
           >
-            <Percent className="me-2 h-4 w-4 text-blue-500" />
-            {formatBps(data.commissionBps ?? null)}
+            <KeyRound className="me-2 h-4 w-4 text-violet-500" />
+            تعيين كلمة المرور
           </Button>
         </div>
       </div>
@@ -195,7 +217,7 @@ export default function AdminCompanyDetailPage() {
             </InfoRow>
             <InfoRow label="الوصف">
               <span className="whitespace-pre-line text-muted-foreground">
-                {data.description ?? '—'}
+                {orDash(data.description)}
               </span>
             </InfoRow>
             <InfoRow label="المنطقة / المدينة" icon={<MapPin className="h-4 w-4" />}>
@@ -203,7 +225,7 @@ export default function AdminCompanyDetailPage() {
             </InfoRow>
             <InfoRow label="ملاحظات">
               <span className="whitespace-pre-line text-muted-foreground">
-                {data.additionalNotes ?? '—'}
+                {orDash(data.additionalNotes)}
               </span>
             </InfoRow>
           </CardContent>
@@ -216,13 +238,13 @@ export default function AdminCompanyDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <InfoRow label="الجوال / واتساب" icon={<Phone className="h-4 w-4" />}>
-              {data.phone ?? '—'}
+              {orDash(data.phone)}
             </InfoRow>
             <InfoRow label="البريد الإلكتروني" icon={<Mail className="h-4 w-4" />}>
-              {data.email ?? '—'}
+              {orDash(data.email)}
             </InfoRow>
             <InfoRow label="الهاتف الثابت" icon={<Phone className="h-4 w-4" />}>
-              {data.landline ?? '—'}
+              {orDash(data.landline)}
             </InfoRow>
             <InfoRow label="رابط واتساب">
               {data.whatsappLink ? (
@@ -252,8 +274,8 @@ export default function AdminCompanyDetailPage() {
                 '—'
               )}
             </InfoRow>
-            <InfoRow label="إنستغرام" icon={<Instagram className="h-4 w-4" />}>
-              {data.instagram ?? '—'}
+            <InfoRow label="إنستغرام" icon={<AtSign className="h-4 w-4" />}>
+              {orDash(data.instagram)}
             </InfoRow>
           </CardContent>
         </Card>
@@ -286,6 +308,82 @@ export default function AdminCompanyDetailPage() {
           </CardContent>
         </Card>
 
+        {/* ── Features / highlights ── */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4" /> المميزات
+              <span className="ms-1 text-xs text-muted-foreground">
+                ({features.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {features.length === 0 ? (
+              <div className="text-sm text-muted-foreground">لم تُحدد مميزات.</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {features.map((f, i) => {
+                  const icon = getFeatureIcon(f.icon);
+                  const Icon = icon?.Icon;
+                  return (
+                    <Badge key={`${f.ar}-${i}`} variant="secondary" className="gap-1">
+                      {Icon && <Icon className="h-3 w-3" />}
+                      {f.ar || f.en}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── Owner login accounts ── */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <KeyRound className="h-4 w-4" /> بيانات دخول لوحة الشركة
+              <span className="ms-1 text-xs text-muted-foreground">
+                ({owners.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {owners.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                لم يتم إنشاء حساب مالك بعد.
+              </div>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {owners.map((o) => (
+                  <li
+                    key={o.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-mono">{o.email}</span>
+                      <Badge variant={o.role === 'owner' ? 'default' : 'secondary'}>
+                        {o.role === 'owner' ? 'مالك' : 'موظف'}
+                      </Badge>
+                      <Badge
+                        variant={o.status === 'active' ? 'outline' : 'destructive'}
+                      >
+                        {o.status === 'active' ? 'نشط' : 'موقوف'}
+                      </Badge>
+                    </div>
+                    {o.displayName && (
+                      <span className="text-xs text-muted-foreground">
+                        {o.displayName}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
         {/* ── Portfolio photos ── */}
         <Card className="md:col-span-2">
           <CardHeader>
@@ -300,15 +398,20 @@ export default function AdminCompanyDetailPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
                 {photos.map((p) => (
-                  <div
+                  <a
                     key={p.objectKey}
-                    className="aspect-square overflow-hidden rounded-xl border bg-muted/30 p-2 text-[10px] text-muted-foreground"
+                    href={resolveMediaUrl(p.objectKey)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="aspect-square overflow-hidden rounded-xl border bg-muted/30"
                   >
-                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                      <ImageIcon className="h-6 w-6 opacity-50" />
-                      <code className="line-clamp-2 text-center">{p.objectKey}</code>
-                    </div>
-                  </div>
+                    <img
+                      src={resolveMediaUrl(p.objectKey)}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </a>
                 ))}
               </div>
             )}
@@ -353,9 +456,9 @@ export default function AdminCompanyDetailPage() {
         open={dialog === 'suspend'}
         onOpenChange={(o) => !o && setDialog(null)}
       />
-      <CommissionDialog
+      <ResetPasswordDialog
         company={data}
-        open={dialog === 'commission'}
+        open={dialog === 'resetPassword'}
         onOpenChange={(o) => !o && setDialog(null)}
       />
     </div>

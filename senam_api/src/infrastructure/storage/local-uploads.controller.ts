@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Controller,
   Get,
-  Param,
   Put,
   Query,
   Req,
@@ -34,7 +33,7 @@ export class LocalUploadsController {
   constructor(private readonly local: LocalFilesystemAdapter) {}
 
   @Public()
-  @Put('*')
+  @Put('{*splat}')
   @ApiOperation({
     summary:
       'Local-storage upload sink. The client receives this URL from /uploads/presign.',
@@ -74,7 +73,7 @@ export class LocalUploadsController {
   }
 
   @Public()
-  @Get('*')
+  @Get('{*splat}')
   @ApiOperation({ summary: 'Serve a locally-stored object by key.' })
   async getObject(
     @Req() req: Request,
@@ -97,9 +96,19 @@ export class LocalUploadsController {
   }
 
   private extractKey(req: Request): string {
-    // req.params[0] holds the wildcard part after `/uploads/raw/`.
-    const wildcardParam = (req.params as Record<string, string>)['0'];
-    return wildcardParam ? decodeURIComponent(wildcardParam) : '';
+    // Express 5 / NestJS 11 named-wildcard: `splat` is either a string or
+    // an array of path segments. We also fall back to parsing the URL path
+    // ourselves so changes in framework versions don't silently break this.
+    const params = req.params as Record<string, string | string[] | undefined>;
+    const raw = params['splat'] ?? params['0'];
+    if (raw) {
+      const joined = Array.isArray(raw) ? raw.join('/') : raw;
+      return decodeURIComponent(joined);
+    }
+    // Fallback: strip the `/v1/uploads/raw/` prefix from the URL.
+    const url = req.originalUrl || req.url;
+    const m = url.match(/\/uploads\/raw\/([^?]+)/);
+    return m ? decodeURIComponent(m[1]!) : '';
   }
 }
 

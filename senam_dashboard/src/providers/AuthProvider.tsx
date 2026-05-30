@@ -6,29 +6,45 @@ import { EP } from '@/lib/api/endpoints';
 import type { AuthTokens } from '@/types/domain';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+let bootstrapRefreshPromise: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
+  if (bootstrapRefreshPromise) return bootstrapRefreshPromise;
   const refreshToken = loadRefresh();
   if (!refreshToken) return false;
-  try {
-    const res = await fetch(`${BASE_URL}${EP.auth.refresh}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) {
+
+  bootstrapRefreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}${EP.auth.refresh}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        useAuthStore.getState().clear();
+        clearRefresh();
+        return false;
+      }
+      const tokens = (await res.json()) as AuthTokens;
+      saveRefresh(tokens.refreshToken);
+      const payload = decodeJwt(tokens.accessToken);
+      if (!payload) {
+        useAuthStore.getState().clear();
+        clearRefresh();
+        return false;
+      }
+      useAuthStore.getState().setSession(tokens.accessToken, payload);
+      return true;
+    } catch {
+      useAuthStore.getState().clear();
       clearRefresh();
       return false;
+    } finally {
+      bootstrapRefreshPromise = null;
     }
-    const tokens = (await res.json()) as AuthTokens;
-    saveRefresh(tokens.refreshToken);
-    const payload = decodeJwt(tokens.accessToken);
-    if (!payload) return false;
-    useAuthStore.getState().setSession(tokens.accessToken, payload);
-    return true;
-  } catch {
-    return false;
-  }
+  })();
+
+  return bootstrapRefreshPromise;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

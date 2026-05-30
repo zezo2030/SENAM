@@ -11,7 +11,7 @@ export default function App() {
       <ThemeProvider>
         <QueryProvider>
           <AuthProvider>
-            <RouterProvider router={router} />
+            <RouterProvider router={router} future={{ v7_startTransition: true }} />
           </AuthProvider>
         </QueryProvider>
       </ThemeProvider>

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck, UserCheck } from 'lucide-react';
@@ -33,16 +33,19 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, login, user } = useAuth();
   const passwordLogin = usePasswordLogin();
+  const from = (location.state as { from?: string } | null)?.from;
+  const initialPrincipal = from?.startsWith('/provider') ? 'provider' : 'admin';
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '', principal: 'admin' },
+    defaultValues: { email: '', password: '', principal: initialPrincipal },
   });
 
   if (isAuthenticated && user) {
-    const target = user.principal === 'provider' ? '/provider/overview' : '/admin/overview';
+    const target = user.principal === 'provider' ? '/provider/identity' : '/admin/overview';
     return <Navigate to={target} replace />;
   }
 
@@ -54,7 +57,9 @@ export default function LoginPage() {
         principal: values.principal,
       });
       login(tokens);
-      const target = values.principal === 'provider' ? '/provider/overview' : '/admin/overview';
+      const fallback =
+        values.principal === 'provider' ? '/provider/identity' : '/admin/overview';
+      const target = from?.startsWith(`/${values.principal}`) ? from : fallback;
       navigate(target, { replace: true });
     } catch (err) {
       const message =

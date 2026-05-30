@@ -5,17 +5,13 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { DataSource, QueryRunner } from 'typeorm';
+import { toStoredMediaPath } from '../../common/utils/media-url.util.js';
+import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 import { AuditService } from '../audit/audit.service.js';
-import { PaymentsService } from '../payments/payments.service.js';
 import { NotificationsProducer } from '../../infrastructure/queue/producers/notifications.producer.js';
-import { DispatchProducer } from '../../infrastructure/queue/producers/dispatch.producer.js';
-import { ApproveCompanyDto } from './dto/approve-company.dto.js';
 import { SuspendCompanyDto } from './dto/suspend-company.dto.js';
-import { UpdateCommissionDto } from './dto/update-commission.dto.js';
-import { InterveneOrderDto } from './dto/intervene-order.dto.js';
-import { CreateCouponDto } from './dto/create-coupon.dto.js';
-import { UpdateCouponDto } from './dto/update-coupon.dto.js';
+import { ResetCompanyPasswordDto } from './dto/reset-company-password.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
@@ -24,7 +20,23 @@ import { CreateBannerDto } from './dto/create-banner.dto.js';
 import { UpdateBannerDto } from './dto/update-banner.dto.js';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto.js';
 
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'unassignable'];
+const PASSWORD_BCRYPT_ROUNDS = 12;
+
+function snakeToCamel(key: string): string {
+  return key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+}
+
+function rowToCamel<T extends Record<string, unknown>>(row: T): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[snakeToCamel(k)] = v;
+  }
+  return out;
+}
+
+function rowsToCamel<T extends Record<string, unknown>>(rows: T[]): Record<string, unknown>[] {
+  return rows.map(rowToCamel);
+}
 
 @Injectable()
 export class AdminService {
@@ -33,12 +45,10 @@ export class AdminService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
-    private readonly paymentsService: PaymentsService,
     private readonly notificationsProducer: NotificationsProducer,
-    private readonly dispatchProducer: DispatchProducer,
   ) {}
 
-  // ─── Companies ───────────────────────────────────────────────────────────────
+  // ─── Companies ─────────────────────────────────────────────────────────
 
   async listCompanies(filter: {
     status?: string;
@@ -74,6 +84,7 @@ export class AdminService {
           slug,
           description,
           logo_object_key             AS "logoObjectKey",
+          cover_object_key            AS "coverObjectKey",
           phone,
           email,
           website,
@@ -82,6 +93,9 @@ export class AdminService {
           whatsapp_link               AS "whatsappLink",
           region,
           city,
+          latitude,
+          longitude,
+          map_url                     AS "mapUrl",
           category_id                 AS "categoryId",
           has_commercial_registration AS "hasCommercialRegistration",
           commercial_registration_no  AS "commercialRegistrationNo",
@@ -93,10 +107,8 @@ export class AdminService {
           status,
           kyc_approved_by             AS "kycApprovedBy",
           kyc_approved_at             AS "kycApprovedAt",
-          commission_bps              AS "commissionBps",
           rating_avg                  AS "ratingAvg",
           rating_count                AS "ratingCount",
-          rejection_rate_pct          AS "rejectionRatePct",
           created_at                  AS "createdAt",
           updated_at                  AS "updatedAt"
         FROM companies ${whereClause}
@@ -115,7 +127,7 @@ export class AdminService {
   ): Promise<void> {
     const result = await this.dataSource.query<Array<{ id: string }>>(
       `UPDATE companies
-       SET status = 'active', kyc_approved_by = $1, kyc_approved_at = now()
+         SET status = 'active', kyc_approved_by = $1, kyc_approved_at = now()
        WHERE id = $2 AND status = 'pending'
        RETURNING id`,
       [adminId, id],
@@ -199,450 +211,55 @@ export class AdminService {
     }
   }
 
-  async updateCommission(
-    id: string,
-    dto: UpdateCommissionDto,
+  async resetCompanyPassword(
+    companyId: string,
+    dto: ResetCompanyPasswordDto,
     adminId: string,
-    _correlationId?: string,
-  ): Promise<void> {
-    const result = await this.dataSource.query<Array<{ id: string; commission_bps: number }>>(
-      `UPDATE companies SET commission_bps = $1 WHERE id = $2 RETURNING id, commission_bps`,
-      [dto.commissionBps, id],
+  ): Promise<{ updatedCount: number; emails: string[] }> {
+    const company = await this.dataSource.query<Array<{ id: string }>>(
+      `SELECT id FROM companies WHERE id = $1`,
+      [companyId],
     );
-
-    if (!result.length) {
+    if (!company.length) {
       throw new NotFoundException('company_not_found');
     }
 
+    const passwordHash = await bcrypt.hash(dto.newPassword, PASSWORD_BCRYPT_ROUNDS);
+
+    const updated = await this.dataSource.query<Array<{ id: string; email: string }>>(
+      `UPDATE company_users
+       SET password_hash = $1, updated_at = now()
+       WHERE company_id = $2 AND role = 'owner'
+       RETURNING id, email`,
+      [passwordHash, companyId],
+    );
+
+    if (!updated.length) {
+      throw new NotFoundException('company_owner_not_found');
+    }
+
     await this.auditService.write({
       actorKind: 'admin',
       actorId: adminId,
-      action: 'company.update_commission',
+      action: 'company.reset_password',
       targetKind: 'company',
-      targetId: id,
-      after: { commissionBps: dto.commissionBps },
-    });
-  }
-
-  // ─── Orders ──────────────────────────────────────────────────────────────────
-
-  async listOrders(filter: {
-    status?: string;
-    companyId?: string;
-    from?: string;
-    to?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ data: unknown[]; total: number; page: number; limit: number }> {
-    const page = filter.page ?? 1;
-    const limit = filter.limit ?? 20;
-    const offset = (page - 1) * limit;
-
-    const conditions: string[] = [];
-    const params: unknown[] = [];
-
-    if (filter.status) {
-      params.push(filter.status);
-      conditions.push(`status = $${params.length}`);
-    }
-    if (filter.companyId) {
-      params.push(filter.companyId);
-      conditions.push(`company_id = $${params.length}`);
-    }
-    if (filter.from) {
-      params.push(filter.from);
-      conditions.push(`created_at >= $${params.length}`);
-    }
-    if (filter.to) {
-      params.push(filter.to);
-      conditions.push(`created_at <= $${params.length}`);
-    }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    const countResult = await this.dataSource.query<Array<{ count: string }>>(
-      `SELECT COUNT(*) AS count FROM orders ${whereClause}`,
-      params,
-    );
-    const total = parseInt(countResult[0]?.count ?? '0', 10);
-
-    params.push(limit);
-    params.push(offset);
-
-    const data = await this.dataSource.query(
-      `SELECT * FROM orders ${whereClause} ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
-      params,
-    );
-
-    return { data, total, page, limit };
-  }
-
-  async intervene(
-    orderId: string,
-    dto: InterveneOrderDto,
-    adminId: string,
-  ): Promise<void> {
-    const qr: QueryRunner = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-
-    try {
-      // Load order with FOR UPDATE lock
-      const orders = (await qr.query(
-        `SELECT * FROM orders WHERE id = $1 FOR UPDATE`,
-        [orderId],
-      )) as Array<Record<string, unknown>>;
-      const order = orders[0];
-
-      if (!order) {
-        throw new NotFoundException('order_not_found');
-      }
-
-      const beforeStatus = order['status'] as string;
-
-      if (dto.action === 'cancel') {
-        if (TERMINAL_STATUSES.includes(beforeStatus)) {
-          throw new ConflictException('order_already_in_terminal_state');
-        }
-
-        await qr.query(
-          `UPDATE orders SET status = 'cancelled', cancelled_at = now()
-           WHERE id = $1 AND status NOT IN ('completed','cancelled','unassignable')`,
-          [orderId],
-        );
-
-        // Insert order_status_history
-        await qr.query(
-          `INSERT INTO order_status_history (order_id, from_status, to_status, actor_kind, actor_id, reason)
-           VALUES ($1, $2, 'cancelled', 'admin', $3, $4)`,
-          [orderId, beforeStatus, adminId, dto.reason],
-        );
-
-        // Refund if online payment
-        if (order['payment_method'] !== 'cod') {
-          const payments = (await qr.query(
-            `SELECT id FROM payments WHERE order_id = $1 AND status IN ('captured','authorised') LIMIT 1`,
-            [orderId],
-          )) as Array<{ id: string }>;
-          if (payments.length) {
-            await this.paymentsService.refund(
-              payments[0].id,
-              Number(order['total']),
-              dto.reason,
-              'admin',
-              adminId,
-              qr,
-            );
-          }
-        }
-
-        await this.auditService.write(
-          {
-            actorKind: 'admin',
-            actorId: adminId,
-            action: 'order.intervene',
-            targetKind: 'order',
-            targetId: orderId,
-            before: { status: beforeStatus },
-            after: { status: 'cancelled', reason: dto.reason },
-            reason: dto.reason,
-          },
-          qr,
-        );
-
-        // Persist in-app notification row
-        await qr.query(
-          `INSERT INTO notifications (user_kind, user_id, topic, payload, channels, state)
-           VALUES ('customer', $1, 'order.cancelled', $2, ARRAY['in_app','push'], 'pending')`,
-          [order['customer_id'], JSON.stringify({ orderId, reason: dto.reason })],
-        );
-
-        // Enqueue push/email delivery
-        await this.notificationsProducer.enqueue({
-          userKind: 'customer',
-          userId: order['customer_id'] as string,
-          topic: 'order.cancelled',
-          payload: { orderId, reason: dto.reason },
-          channels: ['push', 'in_app'],
-        });
-
-      } else if (dto.action === 'refund_full') {
-        const payments = (await qr.query(
-          `SELECT id FROM payments WHERE order_id = $1 AND status IN ('captured','authorised') LIMIT 1`,
-          [orderId],
-        )) as Array<{ id: string }>;
-        if (!payments.length) {
-          throw new BadRequestException('no_refundable_payment_found');
-        }
-
-        await this.paymentsService.refund(
-          payments[0].id,
-          Number(order['total']),
-          dto.reason,
-          'admin',
-          adminId,
-          qr,
-        );
-
-        await this.auditService.write(
-          {
-            actorKind: 'admin',
-            actorId: adminId,
-            action: 'order.intervene',
-            targetKind: 'order',
-            targetId: orderId,
-            before: { status: beforeStatus },
-            after: { refundAmount: Number(order['total']), reason: dto.reason },
-            reason: dto.reason,
-          },
-          qr,
-        );
-
-        await qr.query(
-          `INSERT INTO notifications (user_kind, user_id, topic, payload, channels, state)
-           VALUES ('customer', $1, 'order.refunded', $2, ARRAY['in_app','push'], 'pending')`,
-          [order['customer_id'], JSON.stringify({ orderId, amount: Number(order['total']), reason: dto.reason })],
-        );
-
-        await this.notificationsProducer.enqueue({
-          userKind: 'customer',
-          userId: order['customer_id'] as string,
-          topic: 'order.refunded',
-          payload: { orderId, amount: Number(order['total']), reason: dto.reason },
-          channels: ['push', 'in_app'],
-        });
-
-      } else if (dto.action === 'refund_partial') {
-        if (dto.amount === undefined) {
-          throw new BadRequestException('amount_required_for_partial_refund');
-        }
-
-        const paymentsP = (await qr.query(
-          `SELECT id FROM payments WHERE order_id = $1 AND status IN ('captured','authorised') LIMIT 1`,
-          [orderId],
-        )) as Array<{ id: string }>;
-        if (!paymentsP.length) {
-          throw new BadRequestException('no_refundable_payment_found');
-        }
-
-        await this.paymentsService.refund(
-          paymentsP[0].id,
-          dto.amount,
-          dto.reason,
-          'admin',
-          adminId,
-          qr,
-        );
-
-        await this.auditService.write(
-          {
-            actorKind: 'admin',
-            actorId: adminId,
-            action: 'order.intervene',
-            targetKind: 'order',
-            targetId: orderId,
-            before: { status: beforeStatus },
-            after: { refundAmount: dto.amount, reason: dto.reason },
-            reason: dto.reason,
-          },
-          qr,
-        );
-
-        await qr.query(
-          `INSERT INTO notifications (user_kind, user_id, topic, payload, channels, state)
-           VALUES ('customer', $1, 'order.refunded', $2, ARRAY['in_app','push'], 'pending')`,
-          [order['customer_id'], JSON.stringify({ orderId, amount: dto.amount, reason: dto.reason })],
-        );
-
-        await this.notificationsProducer.enqueue({
-          userKind: 'customer',
-          userId: order['customer_id'] as string,
-          topic: 'order.refunded',
-          payload: { orderId, amount: dto.amount, reason: dto.reason },
-          channels: ['push', 'in_app'],
-        });
-
-      } else if (dto.action === 'reassign') {
-        if (!dto.newCompanyId) {
-          throw new BadRequestException('newCompanyId_required_for_reassign');
-        }
-
-        await qr.query(
-          `UPDATE orders SET company_id = $1 WHERE id = $2`,
-          [dto.newCompanyId, orderId],
-        );
-
-        // Enqueue new dispatch
-        const attempt = (Number(order['dispatch_attempt']) || 1) + 1;
-        await this.dispatchProducer.enqueueAcceptTimeout({ orderId, attempt }, 0);
-
-        await this.auditService.write(
-          {
-            actorKind: 'admin',
-            actorId: adminId,
-            action: 'order.intervene',
-            targetKind: 'order',
-            targetId: orderId,
-            before: { companyId: order['company_id'] as string },
-            after: { companyId: dto.newCompanyId, reason: dto.reason },
-            reason: dto.reason,
-          },
-          qr,
-        );
-
-        await qr.query(
-          `INSERT INTO notifications (user_kind, user_id, topic, payload, channels, state)
-           VALUES ('customer', $1, 'order.reassigned', $2, ARRAY['in_app','push'], 'pending')`,
-          [order['customer_id'], JSON.stringify({ orderId, newCompanyId: dto.newCompanyId, reason: dto.reason })],
-        );
-
-        await this.notificationsProducer.enqueue({
-          userKind: 'customer',
-          userId: order['customer_id'] as string,
-          topic: 'order.reassigned',
-          payload: { orderId, newCompanyId: dto.newCompanyId, reason: dto.reason },
-          channels: ['push', 'in_app'],
-        });
-
-        // Notify old company
-        if (order['company_id']) {
-          const companyUsers = (await qr.query(
-            `SELECT id FROM company_users WHERE company_id = $1 AND role = 'owner' LIMIT 1`,
-            [order['company_id']],
-          )) as Array<{ id: string }>;
-          if (companyUsers.length) {
-            await this.notificationsProducer.enqueue({
-              userKind: 'company_user',
-              userId: companyUsers[0].id,
-              topic: 'order.reassigned_away',
-              payload: { orderId, reason: dto.reason },
-              channels: ['push', 'in_app'],
-            });
-          }
-        }
-      }
-
-      await qr.commitTransaction();
-    } catch (err) {
-      await qr.rollbackTransaction();
-      throw err;
-    } finally {
-      await qr.release();
-    }
-  }
-
-  // ─── Coupons ─────────────────────────────────────────────────────────────────
-
-  async listCoupons(
-    page = 1,
-    limit = 20,
-  ): Promise<{ data: unknown[]; total: number; page: number; limit: number }> {
-    const offset = (page - 1) * limit;
-    const countResult = await this.dataSource.query<Array<{ count: string }>>(
-      `SELECT COUNT(*) AS count FROM coupons`,
-    );
-    const total = parseInt(countResult[0]?.count ?? '0', 10);
-    const data = await this.dataSource.query(
-      `SELECT * FROM coupons ORDER BY valid_from DESC LIMIT $1 OFFSET $2`,
-      [limit, offset],
-    );
-    return { data, total, page, limit };
-  }
-
-  async createCoupon(dto: CreateCouponDto, adminId: string): Promise<unknown> {
-    const result = await this.dataSource.query<Array<{ id: string }>>(
-      `INSERT INTO coupons
-         (code, kind, value_bps_or_amount, min_order_amount, scope_category_id, scope_company_id,
-          total_cap, per_user_cap, valid_from, valid_until)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING *`,
-      [
-        dto.code,
-        dto.kind,
-        dto.valueBpsOrAmount,
-        dto.minOrderAmount,
-        dto.scopeCategoryId ?? null,
-        dto.scopeCompanyId ?? null,
-        dto.totalCap ?? null,
-        dto.perUserCap ?? null,
-        dto.validFrom,
-        dto.validUntil,
-      ],
-    );
-
-    const coupon = result[0];
-    await this.auditService.write({
-      actorKind: 'admin',
-      actorId: adminId,
-      action: 'coupon.create',
-      targetKind: 'coupon',
-      targetId: coupon.id,
-      after: coupon,
+      targetId: companyId,
+      after: { ownerIds: updated.map((u) => u.id) },
     });
 
-    return coupon;
+    return {
+      updatedCount: updated.length,
+      emails: updated.map((u) => u.email),
+    };
   }
 
-  async updateCoupon(id: string, dto: UpdateCouponDto, adminId: string): Promise<unknown> {
-    const sets: string[] = [];
-    const params: unknown[] = [];
-
-    if (dto.code !== undefined) { params.push(dto.code); sets.push(`code = $${params.length}`); }
-    if (dto.kind !== undefined) { params.push(dto.kind); sets.push(`kind = $${params.length}`); }
-    if (dto.valueBpsOrAmount !== undefined) { params.push(dto.valueBpsOrAmount); sets.push(`value_bps_or_amount = $${params.length}`); }
-    if (dto.minOrderAmount !== undefined) { params.push(dto.minOrderAmount); sets.push(`min_order_amount = $${params.length}`); }
-    if (dto.scopeCategoryId !== undefined) { params.push(dto.scopeCategoryId); sets.push(`scope_category_id = $${params.length}`); }
-    if (dto.scopeCompanyId !== undefined) { params.push(dto.scopeCompanyId); sets.push(`scope_company_id = $${params.length}`); }
-    if (dto.totalCap !== undefined) { params.push(dto.totalCap); sets.push(`total_cap = $${params.length}`); }
-    if (dto.perUserCap !== undefined) { params.push(dto.perUserCap); sets.push(`per_user_cap = $${params.length}`); }
-    if (dto.validFrom !== undefined) { params.push(dto.validFrom); sets.push(`valid_from = $${params.length}`); }
-    if (dto.validUntil !== undefined) { params.push(dto.validUntil); sets.push(`valid_until = $${params.length}`); }
-    if (dto.isActive !== undefined) { params.push(dto.isActive); sets.push(`is_active = $${params.length}`); }
-
-    if (!sets.length) throw new BadRequestException('no_fields_to_update');
-
-    params.push(id);
-    const result = await this.dataSource.query<Array<{ id: string }>>(
-      `UPDATE coupons SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
-      params,
-    );
-
-    if (!result.length) throw new NotFoundException('coupon_not_found');
-
-    await this.auditService.write({
-      actorKind: 'admin',
-      actorId: adminId,
-      action: 'coupon.update',
-      targetKind: 'coupon',
-      targetId: id,
-      after: dto,
-    });
-
-    return result[0];
-  }
-
-  async deleteCoupon(id: string, adminId: string): Promise<void> {
-    const result = await this.dataSource.query<Array<{ id: string }>>(
-      `UPDATE coupons SET is_active = false WHERE id = $1 RETURNING id`,
-      [id],
-    );
-
-    if (!result.length) throw new NotFoundException('coupon_not_found');
-
-    await this.auditService.write({
-      actorKind: 'admin',
-      actorId: adminId,
-      action: 'coupon.delete',
-      targetKind: 'coupon',
-      targetId: id,
-      after: { isActive: false },
-    });
-  }
-
-  // ─── Categories ──────────────────────────────────────────────────────────────
+  // ─── Categories ────────────────────────────────────────────────────────
 
   async listCategories(): Promise<unknown[]> {
-    return this.dataSource.query(`SELECT * FROM categories ORDER BY sort_order ASC, name_ar ASC`);
+    const rows = await this.dataSource.query<Record<string, unknown>[]>(
+      `SELECT * FROM categories ORDER BY sort_order ASC, name_ar ASC`,
+    );
+    return rowsToCamel(rows);
   }
 
   async createCategory(dto: CreateCategoryDto, adminId: string): Promise<unknown> {
@@ -654,7 +271,7 @@ export class AdminService {
         dto.slug,
         dto.nameAr,
         dto.nameEn ?? null,
-        dto.iconKey ?? null,
+        dto.iconKey ? toStoredMediaPath(dto.iconKey) : null,
         dto.sortOrder ?? 0,
         dto.isActive ?? true,
       ],
@@ -680,7 +297,10 @@ export class AdminService {
     if (dto.slug !== undefined) { params.push(dto.slug); sets.push(`slug = $${params.length}`); }
     if (dto.nameAr !== undefined) { params.push(dto.nameAr); sets.push(`name_ar = $${params.length}`); }
     if (dto.nameEn !== undefined) { params.push(dto.nameEn); sets.push(`name_en = $${params.length}`); }
-    if (dto.iconKey !== undefined) { params.push(dto.iconKey); sets.push(`icon_key = $${params.length}`); }
+    if (dto.iconKey !== undefined) {
+      params.push(dto.iconKey ? toStoredMediaPath(dto.iconKey) : null);
+      sets.push(`icon_key = $${params.length}`);
+    }
     if (dto.sortOrder !== undefined) { params.push(dto.sortOrder); sets.push(`sort_order = $${params.length}`); }
     if (dto.isActive !== undefined) { params.push(dto.isActive); sets.push(`is_active = $${params.length}`); }
 
@@ -724,23 +344,41 @@ export class AdminService {
     });
   }
 
-  // ─── Services ─────────────────────────────────────────────────────────────────
+  // ─── Services ──────────────────────────────────────────────────────────
 
   async listServices(categoryId?: string): Promise<unknown[]> {
-    if (categoryId) {
-      return this.dataSource.query(
-        `SELECT * FROM services WHERE category_id = $1 ORDER BY name_ar ASC`,
-        [categoryId],
-      );
-    }
-    return this.dataSource.query(`SELECT * FROM services ORDER BY name_ar ASC`);
+    const baseSql = `
+      SELECT
+        s.id,
+        s.category_id,
+        s.slug,
+        s.name_ar,
+        s.name_en,
+        s.description_ar,
+        s.description_en,
+        s.icon_key,
+        s.image_key,
+        s.is_active,
+        c.name_ar AS category_name_ar,
+        c.name_en AS category_name_en
+      FROM services s
+      LEFT JOIN categories c ON c.id = s.category_id`;
+    const rows = categoryId
+      ? await this.dataSource.query<Record<string, unknown>[]>(
+          `${baseSql} WHERE s.category_id = $1 ORDER BY s.name_ar ASC`,
+          [categoryId],
+        )
+      : await this.dataSource.query<Record<string, unknown>[]>(
+          `${baseSql} ORDER BY s.name_ar ASC`,
+        );
+    return rowsToCamel(rows);
   }
 
   async createService(dto: CreateServiceDto, adminId: string): Promise<unknown> {
     const result = await this.dataSource.query<Array<{ id: string }>>(
       `INSERT INTO services
-         (category_id, slug, name_ar, name_en, description_ar, base_duration_minutes, is_active)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+         (category_id, slug, name_ar, name_en, description_ar, description_en, icon_key, image_key, is_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
       [
         dto.categoryId,
@@ -748,7 +386,9 @@ export class AdminService {
         dto.nameAr,
         dto.nameEn ?? null,
         dto.descriptionAr ?? null,
-        dto.baseDurationMinutes ?? 60,
+        dto.descriptionEn ?? null,
+        dto.iconKey ? toStoredMediaPath(dto.iconKey) : null,
+        dto.imageKey ? toStoredMediaPath(dto.imageKey) : null,
         dto.isActive ?? true,
       ],
     );
@@ -775,7 +415,15 @@ export class AdminService {
     if (dto.nameAr !== undefined) { params.push(dto.nameAr); sets.push(`name_ar = $${params.length}`); }
     if (dto.nameEn !== undefined) { params.push(dto.nameEn); sets.push(`name_en = $${params.length}`); }
     if (dto.descriptionAr !== undefined) { params.push(dto.descriptionAr); sets.push(`description_ar = $${params.length}`); }
-    if (dto.baseDurationMinutes !== undefined) { params.push(dto.baseDurationMinutes); sets.push(`base_duration_minutes = $${params.length}`); }
+    if (dto.descriptionEn !== undefined) { params.push(dto.descriptionEn); sets.push(`description_en = $${params.length}`); }
+    if (dto.iconKey !== undefined) {
+      params.push(dto.iconKey ? toStoredMediaPath(dto.iconKey) : null);
+      sets.push(`icon_key = $${params.length}`);
+    }
+    if (dto.imageKey !== undefined) {
+      params.push(dto.imageKey ? toStoredMediaPath(dto.imageKey) : null);
+      sets.push(`image_key = $${params.length}`);
+    }
     if (dto.isActive !== undefined) { params.push(dto.isActive); sets.push(`is_active = $${params.length}`); }
 
     if (!sets.length) throw new BadRequestException('no_fields_to_update');
@@ -818,7 +466,7 @@ export class AdminService {
     });
   }
 
-  // ─── Banners ─────────────────────────────────────────────────────────────────
+  // ─── Banners ───────────────────────────────────────────────────────────
 
   async listBanners(): Promise<unknown[]> {
     return this.dataSource.query(
@@ -838,7 +486,7 @@ export class AdminService {
         dto.titleEn ?? null,
         dto.subtitleAr ?? null,
         dto.subtitleEn ?? null,
-        dto.imageUrl,
+        toStoredMediaPath(dto.imageUrl),
         dto.linkUrl ?? null,
         dto.targetType ?? null,
         dto.targetId ?? null,
@@ -870,7 +518,10 @@ export class AdminService {
     if (dto.titleEn !== undefined) { params.push(dto.titleEn); sets.push(`title_en = $${params.length}`); }
     if (dto.subtitleAr !== undefined) { params.push(dto.subtitleAr); sets.push(`subtitle_ar = $${params.length}`); }
     if (dto.subtitleEn !== undefined) { params.push(dto.subtitleEn); sets.push(`subtitle_en = $${params.length}`); }
-    if (dto.imageUrl !== undefined) { params.push(dto.imageUrl); sets.push(`image_url = $${params.length}`); }
+    if (dto.imageUrl !== undefined) {
+      params.push(toStoredMediaPath(dto.imageUrl));
+      sets.push(`image_url = $${params.length}`);
+    }
     if (dto.linkUrl !== undefined) { params.push(dto.linkUrl); sets.push(`link_url = $${params.length}`); }
     if (dto.targetType !== undefined) { params.push(dto.targetType); sets.push(`target_type = $${params.length}`); }
     if (dto.targetId !== undefined) { params.push(dto.targetId); sets.push(`target_id = $${params.length}`); }
@@ -919,7 +570,7 @@ export class AdminService {
     });
   }
 
-  // ─── Users ───────────────────────────────────────────────────────────────────
+  // ─── Users ─────────────────────────────────────────────────────────────
 
   async listUsers(filter: {
     status?: string;

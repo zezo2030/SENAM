@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
   Param,
   Body,
   Query,
@@ -24,7 +23,7 @@ import { AdminService } from './admin.service.js';
 import { CompaniesService } from '../companies/companies.service.js';
 import { ApproveCompanyDto } from './dto/approve-company.dto.js';
 import { SuspendCompanyDto } from './dto/suspend-company.dto.js';
-import { UpdateCommissionDto } from './dto/update-commission.dto.js';
+import { ResetCompanyPasswordDto } from './dto/reset-company-password.dto.js';
 
 @ApiTags('admin-companies')
 @ApiBearerAuth()
@@ -84,14 +83,15 @@ export class CompaniesAdminController {
     return this.adminService.suspendCompany(id, user.sub, dto);
   }
 
-  @Patch(':id/commission')
-  @Roles('super_admin')
-  @ApiOperation({ summary: 'Update company commission (super_admin only)' })
-  updateCommission(
+  @Post(':id/reset-password')
+  @Roles('super_admin', 'ops_admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password for company owner(s) on their provider dashboard' })
+  resetCompanyPassword(
     @Param('id') id: string,
-    @Body() dto: UpdateCommissionDto,
+    @Body() dto: ResetCompanyPasswordDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.adminService.updateCommission(id, dto, user.sub);
+    return this.adminService.resetCompanyPassword(id, dto, user.sub);
   }
 }

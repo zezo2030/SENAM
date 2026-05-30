@@ -1,16 +1,16 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+﻿import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { IsOptional, IsUUID, IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { SearchService } from './search.service.js';
-
+import { IsUuidLoose } from '../../common/decorators/is-uuid-loose.decorator.js';
 class SearchQueryDto {
   @IsString()
   @MinLength(1)
   q!: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsUuidLoose()
   categoryId?: string;
 }
 

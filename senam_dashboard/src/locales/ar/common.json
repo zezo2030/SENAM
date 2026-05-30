@@ -3,22 +3,24 @@
     "name": "لوحة سنام",
     "tagline": "مركز تحكم المسؤول ومزود الخدمة"
   },
+  "roles": {
+    "provider_owner": "مالك المزود",
+    "super_admin": "مسؤول أعلى",
+    "ops_admin": "عمليات",
+    "finance_admin": "مالية",
+    "support_admin": "دعم"
+  },
   "nav": {
     "overview": "نظرة عامة",
     "companies": "الشركات",
     "users": "المستخدمون",
-    "orders": "الطلبات",
     "catalog": "الكتالوج",
     "categories": "التصنيفات",
     "services": "الخدمات",
-    "coupons": "الكوبونات",
     "banners": "البانرات",
-    "settlements": "التسويات",
     "reports": "التقارير",
     "audit": "سجل التدقيق",
-    "staff": "الموظفون",
-    "financials": "الماليات",
-    "profile": "الملف الشخصي",
+    "profile": "صفحة الشركة",
     "logout": "تسجيل الخروج"
   },
   "actions": {

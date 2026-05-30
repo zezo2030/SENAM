@@ -3,27 +3,25 @@ import { api } from '@/lib/api/client';
 import { EP } from '@/lib/api/endpoints';
 import { QK } from '@/lib/query-keys';
 
-export interface SalesBucket {
+export interface DirectoryByDay {
   date: string;
-  grossMinor?: number | string;
-  orderCount?: number;
-  commissionMinor?: number | string;
+  registrations: number;
+  reviews: number;
 }
 
-export interface SalesReport {
-  gmvMinor?: number | string;
-  orderCount?: number;
-  commissionMinor?: number | string;
-  avgOrderMinor?: number | string;
-  buckets?: SalesBucket[];
-  [key: string]: unknown;
+export interface DirectoryReport {
+  from: string;
+  to: string;
+  totalCompanies: number;
+  activeCompanies: number;
+  pendingCompanies: number;
+  totalReviews: number;
+  byDay: DirectoryByDay[];
 }
 
-export interface SalesParams {
+export interface DirectoryParams {
   from?: string;
   to?: string;
-  granularity?: 'day' | 'week' | 'month';
-  categoryId?: string;
 }
 
 function buildQuery(params?: Record<string, unknown>): string {
@@ -37,11 +35,13 @@ function buildQuery(params?: Record<string, unknown>): string {
   return s ? `?${s}` : '';
 }
 
-export function useSalesReport(params?: SalesParams) {
+export function useDirectoryReport(params?: DirectoryParams) {
   const queryParams = params as Record<string, unknown> | undefined;
   return useQuery({
-    queryKey: QK.admin.reportsSales(queryParams),
+    queryKey: QK.admin.reportsDirectory(queryParams),
     queryFn: () =>
-      api.get<SalesReport>(`${EP.admin.reportsSales}${buildQuery(queryParams)}`),
+      api.get<DirectoryReport>(
+        `${EP.admin.reportsDirectory}${buildQuery(queryParams)}`,
+      ),
   });
 }

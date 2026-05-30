@@ -1,4 +1,4 @@
-import {
+﻿import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
@@ -8,7 +8,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   MaxLength,
   Min,
@@ -18,6 +17,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { IsUuidLoose } from '../../../common/decorators/is-uuid-loose.decorator.js';
 export const KYC_DOCUMENT_KINDS = [
   'commercial_registration',
   'tax_card',
@@ -62,14 +62,14 @@ export class PortfolioPhotoDto {
 }
 
 export class RegisterCompanyApplicationDto {
-  // ── Step 1: company info ───────────────────────────────────────────────
-  @ApiProperty({ example: 'برق لغسيل السيارات' })
+  // â”€â”€ Step 1: company info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  @ApiProperty({ example: 'Ø¨Ø±Ù‚ Ù„ØºØ³ÙŠÙ„ Ø§Ù„Ø³ÙŠØ§Ø±Ø§Øª' })
   @IsString()
   @MinLength(2)
   @MaxLength(200)
   legalName!: string;
 
-  @ApiProperty({ example: 'برق' })
+  @ApiProperty({ example: 'Ø¨Ø±Ù‚' })
   @IsString()
   @MinLength(2)
   @MaxLength(120)
@@ -77,7 +77,7 @@ export class RegisterCompanyApplicationDto {
 
   @ApiProperty({
     example: 'barq',
-    description: 'URL slug — lowercase letters, numbers, dashes',
+    description: 'URL slug â€” lowercase letters, numbers, dashes',
   })
   @IsString()
   @Matches(/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/, {
@@ -87,7 +87,7 @@ export class RegisterCompanyApplicationDto {
 
   @ApiPropertyOptional({ description: 'Main service category (catalog category UUID).' })
   @IsOptional()
-  @IsUUID()
+  @IsUuidLoose()
   categoryId?: string;
 
   @ApiPropertyOptional({ description: 'Object key for the uploaded logo.' })
@@ -107,7 +107,7 @@ export class RegisterCompanyApplicationDto {
   @MaxLength(64)
   commercialRegistrationNo?: string;
 
-  @ApiPropertyOptional({ example: 'غسيل سيارات متنقل بأحدث المعدات' })
+  @ApiPropertyOptional({ example: 'ØºØ³ÙŠÙ„ Ø³ÙŠØ§Ø±Ø§Øª Ù…ØªÙ†Ù‚Ù„ Ø¨Ø£Ø­Ø¯Ø« Ø§Ù„Ù…Ø¹Ø¯Ø§Øª' })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
@@ -136,19 +136,19 @@ export class RegisterCompanyApplicationDto {
   @MaxLength(120)
   instagram?: string;
 
-  @ApiPropertyOptional({ example: 'الدوحة' })
+  @ApiPropertyOptional({ example: 'Ø§Ù„Ø¯ÙˆØ­Ø©' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   region?: string;
 
-  @ApiPropertyOptional({ example: 'الوكرة' })
+  @ApiPropertyOptional({ example: 'Ø§Ù„ÙˆÙƒØ±Ø©' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   city?: string;
 
-  // ── Step 2: services ────────────────────────────────────────────────────
+  // â”€â”€ Step 2: services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @ApiPropertyOptional({
     type: [String],
     description: 'IDs of catalog services this company is applying to provide.',
@@ -156,7 +156,7 @@ export class RegisterCompanyApplicationDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(40)
-  @IsUUID('all', { each: true })
+  @IsUuidLoose({ each: true })
   serviceIds?: string[];
 
   @ApiPropertyOptional({ description: 'Custom service the company wants to offer (Arabic).' })
@@ -165,7 +165,7 @@ export class RegisterCompanyApplicationDto {
   @MaxLength(200)
   customServiceText?: string;
 
-  // ── Step 3: portfolio + extra contact ───────────────────────────────────
+  // â”€â”€ Step 3: portfolio + extra contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @ApiPropertyOptional({ type: [PortfolioPhotoDto], description: 'Up to 10 portfolio photos.' })
   @IsOptional()
   @IsArray()
@@ -192,7 +192,7 @@ export class RegisterCompanyApplicationDto {
   @MaxLength(2000)
   additionalNotes?: string;
 
-  // ── Step 4: subscription ────────────────────────────────────────────────
+  // â”€â”€ Step 4: subscription â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @ApiPropertyOptional({ enum: SUBSCRIPTION_PLANS })
   @IsOptional()
   @IsIn(SUBSCRIPTION_PLANS as unknown as string[])
@@ -209,12 +209,12 @@ export class RegisterCompanyApplicationDto {
   @Min(0)
   subscriptionPrice?: number;
 
-  // ── Owner account (required for company dashboard login) ────────────────
+  // â”€â”€ Owner account (required for company dashboard login) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @ApiProperty({ example: 'owner@barq.qa', description: 'Email of the company owner account.' })
   @IsEmail()
   ownerEmail!: string;
 
-  @ApiPropertyOptional({ example: 'مالك برق' })
+  @ApiPropertyOptional({ example: 'Ù…Ø§Ù„Ùƒ Ø¨Ø±Ù‚' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
@@ -226,7 +226,7 @@ export class RegisterCompanyApplicationDto {
   @MaxLength(128)
   ownerPassword!: string;
 
-  // ── KYC documents (still required) ──────────────────────────────────────
+  // â”€â”€ KYC documents (still required) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   @ApiProperty({
     type: [KycDocumentDto],
     description:

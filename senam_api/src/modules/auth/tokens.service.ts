@@ -10,6 +10,9 @@ export interface JwtPayload {
   principal: 'customer' | 'provider' | 'admin';
   roles: string[];
   companyId?: string | undefined;
+  /** Shown in dashboard user menu (display name or company name). */
+  name?: string | undefined;
+  email?: string | undefined;
   jti?: string | undefined;
 }
 
@@ -62,6 +65,8 @@ export class TokensService {
       principal: payload.principal,
       roles: payload.roles ?? [],
       ...(payload.companyId ? { companyId: payload.companyId } : {}),
+      ...(payload.name ? { name: payload.name } : {}),
+      ...(payload.email ? { email: payload.email } : {}),
     });
   }
 

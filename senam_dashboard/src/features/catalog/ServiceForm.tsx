@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { ImageUpload } from '@/components/shared/ImageUpload';
 import {
   Select,
   SelectContent,
@@ -32,14 +33,16 @@ import {
   type Service,
   type Category,
 } from '@/api/admin-catalog.api';
+import { localizedName } from '@/lib/catalog-labels';
+import { useUiStore } from '@/store/ui.store';
 
 const schema = z.object({
   categoryId: z.string().min(1),
   nameAr: z.string().min(1),
   nameEn: z.string().min(1),
   slug: z.string().min(1),
-  basePriceQar: z.coerce.number().min(0),
-  durationMinutes: z.coerce.number().int().min(1),
+  iconKey: z.string().optional().default(''),
+  imageKey: z.string().optional().default(''),
   descriptionAr: z.string().optional(),
   descriptionEn: z.string().optional(),
   active: z.boolean().default(true),
@@ -53,8 +56,18 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+function readField(s: Service | null, ...keys: string[]): string {
+  if (!s) return '';
+  for (const k of keys) {
+    const v = s[k];
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  return '';
+}
+
 export function ServiceForm({ service, categories, open, onOpenChange }: Props) {
   const { t } = useTranslation('catalog');
+  const lang = useUiStore((s) => s.lang);
   const isEdit = !!service;
   const create = useCreateService();
   const update = useUpdateService();
@@ -67,8 +80,8 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
       nameAr: '',
       nameEn: '',
       slug: '',
-      basePriceQar: 0,
-      durationMinutes: 30,
+      iconKey: '',
+      imageKey: '',
       descriptionAr: '',
       descriptionEn: '',
       active: true,
@@ -77,24 +90,44 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
 
   useEffect(() => {
     if (open) {
-      const priceMinor = service?.basePriceMinor;
-      const priceQar =
-        priceMinor === undefined || priceMinor === null
-          ? 0
-          : Number(priceMinor) / 100;
       form.reset({
-        categoryId: service?.categoryId ?? categories[0]?.id ?? '',
-        nameAr: service?.nameAr ?? '',
-        nameEn: service?.nameEn ?? '',
+        categoryId:
+          (service?.categoryId as string | undefined) ??
+          (service?.category_id as string | undefined) ??
+          categories[0]?.id ??
+          '',
+        nameAr:
+          (service?.nameAr as string | undefined) ??
+          (service?.name_ar as string | undefined) ??
+          '',
+        nameEn:
+          (service?.nameEn as string | undefined) ??
+          (service?.name_en as string | undefined) ??
+          '',
         slug: service?.slug ?? '',
-        basePriceQar: priceQar,
-        durationMinutes: service?.durationMinutes ?? 30,
-        descriptionAr: service?.descriptionAr ?? '',
-        descriptionEn: service?.descriptionEn ?? '',
-        active: service?.active ?? true,
+        iconKey: readField(service, 'iconKey', 'icon_key', 'iconUrl'),
+        imageKey: readField(service, 'imageKey', 'image_key', 'imageUrl'),
+        descriptionAr:
+          (service?.descriptionAr as string | undefined) ??
+          (service?.description_ar as string | undefined) ??
+          '',
+        descriptionEn:
+          (service?.descriptionEn as string | undefined) ??
+          (service?.description_en as string | undefined) ??
+          '',
+        active:
+          (service?.active as boolean | undefined) ??
+          (service?.isActive as boolean | undefined) ??
+          (service?.is_active as boolean | undefined) ??
+          true,
       });
     }
   }, [open, service, categories, form]);
+
+  const selectedCategoryId = form.watch('categoryId');
+  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  const iconValue = form.watch('iconKey') ?? '';
+  const imageValue = form.watch('imageKey') ?? '';
 
   const onSubmit = form.handleSubmit(async (values) => {
     const payload: Partial<Service> = {
@@ -102,11 +135,11 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
       nameAr: values.nameAr,
       nameEn: values.nameEn,
       slug: values.slug,
-      basePriceMinor: Math.round(values.basePriceQar * 100),
-      durationMinutes: values.durationMinutes,
+      iconKey: values.iconKey || undefined,
+      imageKey: values.imageKey || undefined,
       descriptionAr: values.descriptionAr,
       descriptionEn: values.descriptionEn,
-      active: values.active,
+      isActive: values.active,
     };
     if (isEdit && service) {
       await update.mutateAsync({ id: service.id, ...payload });
@@ -119,7 +152,7 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{isEdit ? t('services.edit') : t('services.new')}</SheetTitle>
         </SheetHeader>
@@ -127,16 +160,20 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
           <div className="space-y-1.5">
             <Label>{t('form.category')}</Label>
             <Select
-              value={form.watch('categoryId')}
+              value={selectedCategoryId}
               onValueChange={(v) => form.setValue('categoryId', v, { shouldDirty: true })}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder={t('form.category')}>
+                  {selectedCategory
+                    ? (localizedName(selectedCategory, lang) ?? selectedCategory.slug)
+                    : null}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.nameEn ?? c.nameAr ?? c.id}
+                    {localizedName(c, lang) ?? c.slug ?? '—'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -159,27 +196,29 @@ export function ServiceForm({ service, categories, open, onOpenChange }: Props) 
             <Input id="slug" dir="ltr" {...form.register('slug')} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="basePriceQar">{t('form.basePriceQar')}</Label>
-              <Input
-                id="basePriceQar"
-                type="number"
-                step="0.01"
-                min={0}
-                {...form.register('basePriceQar')}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="durationMinutes">{t('form.durationMin')}</Label>
-              <Input
-                id="durationMinutes"
-                type="number"
-                min={1}
-                {...form.register('durationMinutes')}
-              />
-            </div>
-          </div>
+          <ImageUpload
+            label={t('form.icon')}
+            purpose="service_icon"
+            value={iconValue}
+            onChange={(v) =>
+              form.setValue('iconKey', v, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
+
+          <ImageUpload
+            label={t('form.image')}
+            purpose="service_image"
+            value={imageValue}
+            onChange={(v) =>
+              form.setValue('imageKey', v, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="descriptionAr">{t('form.descriptionAr')}</Label>

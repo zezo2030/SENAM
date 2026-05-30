@@ -10,6 +10,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { ReportsService } from './reports.service.js';
 
@@ -19,17 +20,13 @@ import { ReportsService } from './reports.service.js';
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  @Get('sales')
-  @Roles('super_admin', 'finance_admin')
-  @ApiOperation({ summary: 'Sales report aggregated by day' })
-  @ApiQuery({ name: 'from', required: true, description: 'ISO date string (start of range)' })
-  @ApiQuery({ name: 'to', required: true, description: 'ISO date string (end of range)' })
-  @ApiQuery({ name: 'categoryId', required: false })
-  salesReport(
-    @Query('from') from: string,
-    @Query('to') to: string,
-    @Query('categoryId') categoryId?: string,
-  ) {
+  @Get('directory')
+  @SkipThrottle()
+  @Roles('super_admin', 'ops_admin', 'support_admin')
+  @ApiOperation({ summary: 'Directory metrics (companies, reviews) by day' })
+  @ApiQuery({ name: 'from', required: true })
+  @ApiQuery({ name: 'to', required: true })
+  directoryReport(@Query('from') from: string, @Query('to') to: string) {
     if (!from || !to) {
       throw new BadRequestException('from and to query params are required');
     }
@@ -41,6 +38,6 @@ export class ReportsController {
       throw new BadRequestException('from and to must be valid ISO date strings');
     }
 
-    return this.reportsService.salesReport(fromDate, toDate, categoryId);
+    return this.reportsService.directoryReport(fromDate, toDate);
   }
 }

@@ -32,6 +32,8 @@ export interface AdminCompany {
 
 export interface AdminCompanyDetail extends AdminCompany {
   description?: string | null;
+  coverObjectKey?: string | null;
+  features?: Array<{ ar: string; en: string; icon?: string }>;
   landline?: string | null;
   whatsappLink?: string | null;
   customServiceText?: string | null;
@@ -47,6 +49,13 @@ export interface AdminCompanyDetail extends AdminCompany {
   }>;
   documents?: Array<{ kind: string; objectKey: string }>;
   portfolioPhotos?: Array<{ objectKey: string; sortOrder: number }>;
+  owners?: Array<{
+    id: string;
+    email: string;
+    displayName: string | null;
+    role: 'owner' | 'staff';
+    status: 'active' | 'suspended';
+  }>;
 }
 
 export interface ListCompaniesParams {
@@ -127,5 +136,20 @@ export function useUpdateCommission() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'companies'] });
     },
+  });
+}
+
+export interface ResetCompanyPasswordResponse {
+  updatedCount: number;
+  emails: string[];
+}
+
+export function useResetCompanyPassword() {
+  return useMutation({
+    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
+      api.post<ResetCompanyPasswordResponse>(
+        EP.admin.companyResetPassword(id),
+        { newPassword },
+      ),
   });
 }

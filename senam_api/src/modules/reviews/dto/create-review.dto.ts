@@ -3,9 +3,9 @@ import {
   IsOptional,
   IsString,
   IsArray,
-  IsUUID,
   Min,
   Max,
+  Length,
 } from 'class-validator';
 
 export class CreateReviewDto {
@@ -13,12 +13,6 @@ export class CreateReviewDto {
   @Min(1)
   @Max(5)
   ratingCompany!: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  ratingStaff?: number;
 
   @IsOptional()
   @IsInt()
@@ -34,14 +28,11 @@ export class CreateReviewDto {
 
   @IsOptional()
   @IsString()
+  @Length(0, 2000)
   comment?: string;
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   photoObjectKeys?: string[];
-
-  @IsOptional()
-  @IsUUID()
-  staffId?: string;
 }

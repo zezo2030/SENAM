@@ -17,16 +17,26 @@ type UploadPurpose =
   | 'kyc_document'
   | 'review_photo'
   | 'company_logo'
+  | 'company_cover'
   | 'portfolio_photo'
-  | 'banner_image';
+  | 'gallery_photo'
+  | 'banner_image'
+  | 'category_icon'
+  | 'service_icon'
+  | 'service_image';
 
 const ALLOWED_PURPOSES: UploadPurpose[] = [
   'profile_photo',
   'kyc_document',
   'review_photo',
   'company_logo',
+  'company_cover',
   'portfolio_photo',
+  'gallery_photo',
   'banner_image',
+  'category_icon',
+  'service_icon',
+  'service_image',
 ];
 
 class PresignBodyDto {

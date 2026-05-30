@@ -11,6 +11,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useProviderCompany } from '@/api/provider-profile.api';
+import type { Role } from '@/types/domain';
 
 function initials(value: string | undefined) {
   if (!value) return '?';
@@ -20,25 +22,45 @@ function initials(value: string | undefined) {
   return (first + second).toUpperCase();
 }
 
+function formatRoles(roles: Role[], t: (key: string, opts?: { defaultValue?: string }) => string) {
+  if (!roles.length) return null;
+  return roles
+    .map((role) => t(`roles.${role}`, { defaultValue: role }))
+    .join(' · ');
+}
+
 export function UserMenu() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
-  const email = user?.sub ?? '—';
-  const roles = user?.roles?.join(', ') ?? user?.principal ?? '—';
+  const isProvider = user?.principal === 'provider';
+  const { data: company } = useProviderCompany(isProvider);
+
+  const displayName =
+    (isProvider ? company?.displayName?.trim() : undefined) ||
+    user?.name?.trim() ||
+    user?.email ||
+    '—';
+
+  const subtitle =
+    user?.email && user.email !== displayName
+      ? user.email
+      : formatRoles(user?.roles ?? [], t);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarFallback>{initials(email)}</AvatarFallback>
+            <AvatarFallback>{initials(displayName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col">
-          <span className="truncate text-sm font-medium">{email}</span>
-          <span className="text-xs text-muted-foreground">{roles}</span>
+          <span className="truncate text-sm font-medium">{displayName}</span>
+          {subtitle ? (
+            <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
+          ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void logout()}>

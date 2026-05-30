@@ -4,16 +4,19 @@ import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/company.dart';
 import '../../domain/usecases/get_companies.dart';
 import '../../domain/usecases/get_companies_by_category.dart';
+import '../../domain/usecases/get_companies_by_sub_service.dart';
 
 part 'companies_state.dart';
 
-/// Cubit لإدارة قائمة الشركات ضمن تصنيف معيّن مع الفرز.
+/// Cubit لإدارة قائمة الشركات ضمن تصنيف أو خدمة فرعية مع الفرز.
 class CompaniesCubit extends Cubit<CompaniesState> {
   final GetCompaniesByCategory getCompaniesByCategory;
+  final GetCompaniesBySubService getCompaniesBySubService;
   final GetCompanies getCompanies;
 
   CompaniesCubit({
     required this.getCompaniesByCategory,
+    required this.getCompaniesBySubService,
     required this.getCompanies,
   }) : super(const CompaniesState());
 
@@ -22,6 +25,21 @@ class CompaniesCubit extends Cubit<CompaniesState> {
     final result = categoryId.isEmpty
         ? await getCompanies(const NoParams())
         : await getCompaniesByCategory(categoryId);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: CompaniesStatus.failure,
+        errorMessage: failure.message,
+      )),
+      (companies) => emit(state.copyWith(
+        status: CompaniesStatus.success,
+        companies: _sorted(companies, state.filterIndex),
+      )),
+    );
+  }
+
+  Future<void> loadBySubService(String subServiceId) async {
+    emit(state.copyWith(status: CompaniesStatus.loading));
+    final result = await getCompaniesBySubService(subServiceId);
     result.fold(
       (failure) => emit(state.copyWith(
         status: CompaniesStatus.failure,
@@ -48,10 +66,10 @@ class CompaniesCubit extends Cubit<CompaniesState> {
         sorted.sort((a, b) => b.rating.compareTo(a.rating));
         break;
       case 2:
-        sorted.sort((a, b) => a.startPrice.compareTo(b.startPrice));
+        sorted.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
         break;
       default:
-        sorted.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+        sorted.sort((a, b) => b.reviewsCount.compareTo(a.reviewsCount));
     }
     return sorted;
   }

@@ -171,8 +171,8 @@ async function seedServiceAreaData(ds: DataSource): Promise<void> {
   );
 
   const [svc] = await ds.query<{ id: string }[]>(
-    `INSERT INTO services (category_id, slug, name_ar, base_duration_minutes, is_active)
-     VALUES ($1, 'area-clean', 'تنظيف عميق', 60, true)
+    `INSERT INTO services (category_id, slug, name_ar, is_active)
+     VALUES ($1, 'area-clean', 'تنظيف عميق', true)
      RETURNING id`,
     [cat.id],
   );

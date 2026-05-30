@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../app/main_nav.dart';
+import '../../../../core/storage/app_prefs.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import 'onboarding_page.dart';
@@ -26,13 +28,15 @@ class _SplashPageState extends State<SplashPage>
     _scale = CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
-    Future.delayed(const Duration(milliseconds: 2400), () {
+    Future.delayed(const Duration(milliseconds: 2400), () async {
+      final seenOnboarding = await AppPrefs.isOnboardingSeen();
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 500),
-          pageBuilder: (_, _, _) => const OnboardingPage(),
+          pageBuilder: (_, _, _) =>
+              seenOnboarding ? const MainNav() : const OnboardingPage(),
           transitionsBuilder: (_, anim, _, child) =>
               FadeTransition(opacity: anim, child: child),
         ),

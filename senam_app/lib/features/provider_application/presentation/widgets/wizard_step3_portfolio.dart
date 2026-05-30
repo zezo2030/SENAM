@@ -144,11 +144,13 @@ class WizardStep3Portfolio extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            const WizardLabel('تواصل واتساب مباشر'),
+            const WizardLabel('رقم واتساب'),
             TextField(
+              keyboardType: TextInputType.phone,
               textDirection: TextDirection.ltr,
               decoration: const InputDecoration(
-                hintText: 'https://wa.me/97455123456',
+                hintText: '97455551234',
+                helperText: 'أدخل الرقم مع مفتاح الدولة بدون رموز، مثال: 97455551234',
                 prefixIcon: Icon(Icons.chat_outlined,
                     color: AppColors.textMuted),
               ),

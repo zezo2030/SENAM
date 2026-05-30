@@ -21,6 +21,7 @@ import {
   type Banner,
 } from '@/api/admin-banners.api';
 import { BannerForm } from '@/features/banners/BannerForm';
+import { resolveMediaUrl } from '@/lib/media-url';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 
 export default function AdminBannersPage() {
@@ -114,7 +115,7 @@ export default function AdminBannersPage() {
                       {b.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={b.imageUrl}
+                          src={resolveMediaUrl(b.imageUrl)}
                           alt={b.titleAr}
                           className="h-10 w-16 rounded object-cover shadow-sm border border-border/40"
                           onError={(e) => {

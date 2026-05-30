@@ -27,12 +27,6 @@ export class CompanyServiceEntity {
   @JoinColumn({ name: 'service_id' })
   service!: ServiceEntity;
 
-  @Column({ type: 'bigint' })
-  price!: string;
-
-  @Column({ name: 'duration_minutes', type: 'int' })
-  durationMinutes!: number;
-
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 }

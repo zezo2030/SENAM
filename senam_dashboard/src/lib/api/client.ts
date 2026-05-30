@@ -126,7 +126,11 @@ export async function request<T = unknown>(
 
   if (responseType === 'void' || res.status === 204) return undefined as T;
   if (responseType === 'blob') return (await res.blob()) as T;
-  return (await res.json()) as T;
+  // Some endpoints return 200 with an empty body (e.g. handlers typed `void`).
+  // Reading as text first avoids `res.json()` throwing on an empty payload.
+  const text = await res.text();
+  if (text.length === 0) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 export const api = {

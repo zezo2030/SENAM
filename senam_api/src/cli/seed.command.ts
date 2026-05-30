@@ -46,24 +46,59 @@ async function seed() {
       `);
     }
 
-    // Categories
+    // Categories — main service types shown in the "Join as Company" wizard.
     await queryRunner.query(`
       INSERT INTO categories (id, slug, name_ar, name_en, sort_order, is_active)
       VALUES
-        ('10000000-0000-0000-0000-000000000001', 'car-wash', 'غسيل السيارات', 'Car Wash', 1, true),
-        ('10000000-0000-0000-0000-000000000002', 'detailing', 'التلميع والتشطيب', 'Detailing', 2, true)
+        ('10000000-0000-0000-0000-000000000001', 'car-wash',            'غسيل سيارات',       'Car Wash',            1,  true),
+        ('10000000-0000-0000-0000-000000000002', 'detailing',           'تلميع وتشطيب',      'Detailing',           2,  true),
+        ('10000000-0000-0000-0000-000000000003', 'cleaning',            'تنظيف',             'Cleaning',            3,  true),
+        ('10000000-0000-0000-0000-000000000004', 'painting',            'صبغ ودهانات',       'Painting',            4,  true),
+        ('10000000-0000-0000-0000-000000000005', 'general-maintenance', 'صيانة عامة',        'General Maintenance', 5,  true),
+        ('10000000-0000-0000-0000-000000000006', 'electrical',          'كهرباء',            'Electrical',          6,  true),
+        ('10000000-0000-0000-0000-000000000007', 'plumbing',            'سباكة',             'Plumbing',            7,  true),
+        ('10000000-0000-0000-0000-000000000008', 'carpentry',           'نجارة وأعمال خشبية','Carpentry & Wood',    8,  true),
+        ('10000000-0000-0000-0000-000000000009', 'kitchens-furniture',  'مطابخ وأثاث',       'Kitchens & Furniture',9,  true),
+        ('10000000-0000-0000-0000-00000000000a', 'car-rental',          'تأجير سيارات',      'Car Rental',          10, true)
       ON CONFLICT (slug) DO NOTHING
     `);
 
-    // Services
+    // Services — at least a few per category so Step 2 (multi-select) has options.
     await queryRunner.query(`
-      INSERT INTO services (id, category_id, slug, name_ar, name_en, description_ar, base_duration_minutes, is_active)
+      INSERT INTO services (id, category_id, slug, name_ar, name_en, description_ar, is_active)
       VALUES
-        ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'external-wash', 'غسيل خارجي', 'External Wash', 'غسيل الجزء الخارجي للسيارة', 60, true),
-        ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'full-wash', 'غسيل شامل', 'Full Wash', 'غسيل داخلي وخارجي', 90, true),
-        ('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'steam-wash', 'غسيل بالبخار', 'Steam Wash', 'غسيل بالبخار الساخن', 60, true),
-        ('20000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000002', 'interior-detailing', 'تنظيف داخلي عميق', 'Interior Detailing', 'تنظيف وتلميع المقصورة', 120, true),
-        ('20000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000002', 'full-detailing', 'تشطيب كامل', 'Full Detailing', 'تشطيب شامل داخلي وخارجي', 180, true)
+        -- Car wash
+        ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'external-wash',      'غسيل خارجي',           'External Wash',          'غسيل الجزء الخارجي للسيارة', true),
+        ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'full-wash',          'غسيل شامل',            'Full Wash',              'غسيل داخلي وخارجي',          true),
+        ('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'steam-wash',         'غسيل بالبخار',         'Steam Wash',             'غسيل بالبخار الساخن',        true),
+        -- Detailing
+        ('20000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000002', 'interior-detailing', 'تنظيف داخلي عميق',     'Interior Detailing',     'تنظيف وتلميع المقصورة',      true),
+        ('20000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000002', 'full-detailing',     'تشطيب كامل',           'Full Detailing',         'تشطيب شامل داخلي وخارجي',    true),
+        -- Cleaning
+        ('20000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000003', 'home-cleaning',      'تنظيف منازل',          'Home Cleaning',          NULL, true),
+        ('20000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000003', 'office-cleaning',    'تنظيف مكاتب',          'Office Cleaning',        NULL, true),
+        ('20000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000003', 'deep-cleaning',      'تنظيف عميق',           'Deep Cleaning',          NULL, true),
+        -- Painting
+        ('20000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000004', 'interior-painting',  'دهان داخلي',           'Interior Painting',      NULL, true),
+        ('20000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000004', 'exterior-painting',  'دهان خارجي',           'Exterior Painting',      NULL, true),
+        -- General maintenance
+        ('20000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-000000000005', 'ac-maintenance',     'صيانة تكييف',          'AC Maintenance',         NULL, true),
+        ('20000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-000000000005', 'general-repair',     'إصلاحات عامة',         'General Repair',         NULL, true),
+        -- Electrical
+        ('20000000-0000-0000-0000-00000000000d', '10000000-0000-0000-0000-000000000006', 'electric-repair',    'إصلاح كهرباء',         'Electric Repair',        NULL, true),
+        ('20000000-0000-0000-0000-00000000000e', '10000000-0000-0000-0000-000000000006', 'electric-install',   'تركيب كهربائي',        'Electric Installation',  NULL, true),
+        -- Plumbing
+        ('20000000-0000-0000-0000-00000000000f', '10000000-0000-0000-0000-000000000007', 'leak-fix',           'إصلاح تسريبات',        'Leak Repair',            NULL, true),
+        ('20000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000007', 'pipe-install',       'تمديد مواسير',         'Pipe Installation',      NULL, true),
+        -- Carpentry
+        ('20000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000008', 'wood-repair',        'إصلاح أعمال خشبية',    'Wood Repair',            NULL, true),
+        ('20000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000008', 'wood-install',       'تركيب أعمال خشبية',    'Wood Installation',      NULL, true),
+        -- Kitchens & furniture
+        ('20000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000009', 'kitchen-install',    'تركيب مطابخ',          'Kitchen Installation',   NULL, true),
+        ('20000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000009', 'furniture-assembly', 'تركيب أثاث',           'Furniture Assembly',     NULL, true),
+        -- Car rental
+        ('20000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-00000000000a', 'daily-rental',       'تأجير يومي',           'Daily Rental',           NULL, true),
+        ('20000000-0000-0000-0000-000000000016', '10000000-0000-0000-0000-00000000000a', 'monthly-rental',     'تأجير شهري',           'Monthly Rental',         NULL, true)
       ON CONFLICT (category_id, slug) DO NOTHING
     `);
 
@@ -85,14 +120,6 @@ async function seed() {
       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
     `, [defaultPasswordHash]);
 
-    // Slot template for active company
-    await queryRunner.query(`
-      INSERT INTO slot_templates (id, company_id, slot_duration_minutes, capacity_per_slot, weekday_mask, open_time, close_time, effective_from)
-      VALUES
-        ('50000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 60, 2, 125, '08:00', '22:00', CURRENT_DATE)
-      ON CONFLICT DO NOTHING
-    `);
-
     // Customers
     await queryRunner.query(`
       INSERT INTO users (id, email, display_name, locale, status)
@@ -103,15 +130,6 @@ async function seed() {
         ('60000000-0000-0000-0000-000000000004', 'customer4@test.com', 'Khalid Test', 'ar', 'active'),
         ('60000000-0000-0000-0000-000000000005', 'outside@test.com', 'Outside Area Customer', 'ar', 'active')
       ON CONFLICT (email) DO NOTHING
-    `);
-
-    // Coupons
-    await queryRunner.query(`
-      INSERT INTO coupons (id, code, kind, value_bps_or_amount, min_order_amount, total_cap, per_user_cap, valid_from, valid_until, is_active)
-      VALUES
-        ('70000000-0000-0000-0000-000000000001', 'WELCOME10', 'percent', 1000, 5000, 100, 1, now() - interval '1 day', now() + interval '30 days', true),
-        ('70000000-0000-0000-0000-000000000002', 'EXPIRED', 'fixed', 2000, 0, NULL, NULL, now() - interval '60 days', now() - interval '30 days', false)
-      ON CONFLICT (code) DO NOTHING
     `);
 
     await queryRunner.commitTransaction();

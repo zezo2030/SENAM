@@ -3,45 +3,51 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
-  ShoppingBag,
-  Users,
-  Wallet,
-  Banknote,
-  UserCircle,
+  Building2,
+  Image as ImageIcon,
+  PhoneCall,
+  MapPin,
+  Wrench,
+  Sparkles,
+  GalleryHorizontalEnd,
   Menu,
   X,
 } from 'lucide-react';
 
+import { useProviderCompany } from '@/api/provider-profile.api';
 import { cn } from '@/lib/utils';
 import { LangSwitcher } from '@/components/shared/LangSwitcher';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { UserMenu } from '@/components/shared/UserMenu';
-import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
 
 interface NavItem {
   to: string;
   labelKey: string;
   icon: typeof LayoutDashboard;
-  ownerOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
-  { to: '/provider/overview', labelKey: 'nav.overview', icon: LayoutDashboard },
-  { to: '/provider/orders', labelKey: 'nav.orders', icon: ShoppingBag },
-  { to: '/provider/staff', labelKey: 'nav.staff', icon: Users, ownerOnly: true },
-  { to: '/provider/settlements', labelKey: 'nav.settlements', icon: Wallet },
-  { to: '/provider/financials', labelKey: 'nav.financials', icon: Banknote },
-  { to: '/provider/profile', labelKey: 'nav.profile', icon: UserCircle },
+  { to: '/provider/identity', labelKey: 'section.identity', icon: Building2 },
+  { to: '/provider/media', labelKey: 'section.media', icon: ImageIcon },
+  { to: '/provider/contacts', labelKey: 'section.contacts', icon: PhoneCall },
+  { to: '/provider/location', labelKey: 'section.location', icon: MapPin },
+  { to: '/provider/services', labelKey: 'section.services', icon: Wrench },
+  { to: '/provider/features', labelKey: 'section.features', icon: Sparkles },
+  { to: '/provider/gallery', labelKey: 'section.gallery', icon: GalleryHorizontalEnd },
 ];
 
 export default function ProviderLayout() {
-  const { t } = useTranslation();
-  const { has } = useRoles();
-  const isOwner = has('provider_owner');
+  const { t } = useTranslation('provider');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: company } = useProviderCompany();
 
-  const filteredNav = NAV.filter((item) => !item.ownerOnly || isOwner);
+  const brandName =
+    company?.displayName?.trim() ||
+    t('app.name', { defaultValue: 'لوحة المزود' });
+  const brandInitial = (brandName.charAt(0) || 'S').toUpperCase();
+
+  const filteredNav = NAV;
 
   return (
     <div className="flex min-h-screen bg-background relative overflow-hidden">
@@ -55,10 +61,10 @@ export default function ProviderLayout() {
         <div className="flex h-16 items-center justify-between border-b px-6">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-primary/20">
-              S
+              {brandInitial}
             </div>
-            <span className="font-black text-xl tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
-              {t('app.name')}
+            <span className="font-black text-xl tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent truncate max-w-[10rem]">
+              {brandName}
             </span>
           </div>
         </div>
@@ -113,10 +119,10 @@ export default function ProviderLayout() {
         <div className="flex h-16 items-center justify-between border-b px-6">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-primary/20">
-              S
+              {brandInitial}
             </div>
-            <span className="font-black text-xl tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
-              {t('app.name')}
+            <span className="font-black text-xl tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent truncate max-w-[10rem]">
+              {brandName}
             </span>
           </div>
           <Button 
@@ -166,8 +172,8 @@ export default function ProviderLayout() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <span className="font-extrabold text-lg bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-              {t('app.name')}
+            <span className="font-extrabold text-lg bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent truncate max-w-[12rem]">
+              {brandName}
             </span>
           </div>
           

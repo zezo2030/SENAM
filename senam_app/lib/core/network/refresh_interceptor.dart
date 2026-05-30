@@ -27,7 +27,9 @@ class RefreshInterceptor extends QueuedInterceptor {
     final request = err.requestOptions;
 
     final isAuthCall = request.path.startsWith('/v1/auth/');
-    if (response?.statusCode != 401 || isAuthCall || request.extra['_retry'] == true) {
+    if (response?.statusCode != 401 ||
+        isAuthCall ||
+        request.extra['_retry'] == true) {
       return handler.next(err);
     }
 
@@ -35,6 +37,7 @@ class RefreshInterceptor extends QueuedInterceptor {
       await (_ongoing ??= _refresh());
     } catch (_) {
       _ongoing = null;
+      await tokenStorage.clearAll();
       onLogout?.call();
       return handler.next(err);
     }
@@ -42,6 +45,7 @@ class RefreshInterceptor extends QueuedInterceptor {
 
     final access = tokenStorage.accessToken;
     if (access == null) {
+      await tokenStorage.clearAll();
       onLogout?.call();
       return handler.next(err);
     }

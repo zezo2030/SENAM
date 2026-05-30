@@ -8,34 +8,20 @@ export const ADMIN_ROLES = [
 ] as const;
 export type AdminRole = (typeof ADMIN_ROLES)[number];
 
-export const PROVIDER_ROLES = ['provider_owner', 'provider_staff'] as const;
+export const PROVIDER_ROLES = ['provider_owner'] as const;
 export type ProviderRole = (typeof PROVIDER_ROLES)[number];
 
 export type Role = AdminRole | ProviderRole;
 
-export type OrderStatus =
-  | 'pending'
-  | 'accepted'
-  | 'on_the_way'
-  | 'arrived'
-  | 'in_progress'
-  | 'completed'
-  | 'cancelled'
-  | 'unassignable';
-
-export type SettlementStatus = 'due' | 'provider_owes' | 'paid' | 'void';
-
 export type CompanyStatus = 'pending' | 'active' | 'suspended';
-
-export type PaymentMethod = 'card' | 'applepay' | 'googlepay' | 'cod';
-
-export type CouponKind = 'percent' | 'fixed';
 
 export interface JwtPayload {
   sub: string;
   principal: Principal;
   roles: Role[];
   companyId?: string;
+  name?: string;
+  email?: string;
   iat: number;
   exp: number;
 }

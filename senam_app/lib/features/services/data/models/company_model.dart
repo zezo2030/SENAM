@@ -43,6 +43,23 @@ class CompanyModel extends Company {
     required super.services,
     required super.address,
     required super.workingHours,
+    super.subServiceIds,
+    super.experienceYears,
+    super.phone,
+    super.whatsapp,
+    super.whatsappLink,
+    super.instagram,
+    super.city,
+    super.latitude,
+    super.longitude,
+    super.mapUrl,
+    super.logoUrl,
+    super.coverPhoto,
+    super.workPhotos,
+    super.galleryCategories,
+    super.gallery,
+    super.features,
+    super.ratingBreakdown,
   });
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +82,47 @@ class CompanyModel extends Company {
           .toList(),
       address: json['address'] as String? ?? '',
       workingHours: json['workingHours'] as String? ?? '',
+      subServiceIds: ((json['subServiceIds'] as List<dynamic>?) ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      experienceYears: json['experienceYears'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      whatsapp: json['whatsapp'] as String? ?? '',
+      whatsappLink: json['whatsappLink'] as String? ?? '',
+      instagram: json['instagram'] as String? ?? '',
+      city: json['city'] as String? ?? 'الدوحة',
+      mapUrl: json['mapUrl'] as String? ?? '',
+      logoUrl: json['logoUrl'] as String? ?? '',
+      coverPhoto: json['coverPhoto'] as String? ?? '',
+      workPhotos: ((json['workPhotos'] as List<dynamic>?) ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      galleryCategories: ((json['galleryCategories'] as List<dynamic>?) ?? [])
+          .whereType<Map>()
+          .map((e) => GalleryCategory(
+                id: (e['id'] ?? '').toString(),
+                ar: (e['ar'] ?? '').toString(),
+                en: (e['en'] ?? '').toString(),
+                sortOrder: (e['sortOrder'] as int?) ?? 0,
+              ))
+          .toList(),
+      features: ((json['features'] as List<dynamic>?) ?? [])
+          .map((e) {
+            if (e is Map) {
+              return CompanyFeature(
+                ar: (e['ar'] ?? '').toString(),
+                en: (e['en'] ?? '').toString(),
+                icon: (e['icon'] as String?)?.trim().isNotEmpty == true
+                    ? (e['icon'] as String).trim()
+                    : null,
+              );
+            }
+            // Tolerate legacy string payloads.
+            return CompanyFeature(ar: e.toString());
+          })
+          .toList(),
+      ratingBreakdown: ((json['ratingBreakdown'] as Map?) ?? {})
+          .map((k, v) => MapEntry(int.parse(k.toString()), v as int)),
     );
   }
 
@@ -92,5 +150,25 @@ class CompanyModel extends Company {
             .toList(),
         'address': address,
         'workingHours': workingHours,
+        'subServiceIds': subServiceIds,
+        'experienceYears': experienceYears,
+        'phone': phone,
+        'whatsapp': whatsapp,
+        'whatsappLink': whatsappLink,
+        'instagram': instagram,
+        'city': city,
+        'mapUrl': mapUrl,
+        'logoUrl': logoUrl,
+        'coverPhoto': coverPhoto,
+        'workPhotos': workPhotos,
+        'features': features
+            .map((f) => {
+                  'ar': f.ar,
+                  'en': f.en,
+                  if (f.icon != null) 'icon': f.icon,
+                })
+            .toList(),
+        'ratingBreakdown':
+            ratingBreakdown.map((k, v) => MapEntry(k.toString(), v)),
       };
 }

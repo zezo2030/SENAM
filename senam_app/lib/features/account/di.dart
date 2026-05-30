@@ -16,6 +16,6 @@ void initAccountDi(GetIt sl) {
       () => AccountRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetProfile(sl()));
   sl.registerLazySingleton(() => GetNotifications(sl()));
-  sl.registerFactory(() => AccountCubit(getProfile: sl()));
+  sl.registerFactory(() => AccountCubit(getProfile: sl(), tokenStorage: sl()));
   sl.registerFactory(() => NotificationsCubit(getNotifications: sl()));
 }

@@ -8,16 +8,10 @@ import enAuth from '@/locales/en/auth.json';
 import arAuth from '@/locales/ar/auth.json';
 import enAdmin from '@/locales/en/admin.json';
 import arAdmin from '@/locales/ar/admin.json';
-import enOrders from '@/locales/en/orders.json';
-import arOrders from '@/locales/ar/orders.json';
 import enAudit from '@/locales/en/audit.json';
 import arAudit from '@/locales/ar/audit.json';
 import enCatalog from '@/locales/en/catalog.json';
 import arCatalog from '@/locales/ar/catalog.json';
-import enCoupons from '@/locales/en/coupons.json';
-import arCoupons from '@/locales/ar/coupons.json';
-import enSettlements from '@/locales/en/settlements.json';
-import arSettlements from '@/locales/ar/settlements.json';
 import enReports from '@/locales/en/reports.json';
 import arReports from '@/locales/ar/reports.json';
 import enProvider from '@/locales/en/provider.json';
@@ -34,7 +28,7 @@ void i18n
     fallbackLng: 'en',
     lng: DEFAULT_LANG,
     supportedLngs: ['en', 'ar'],
-    ns: ['common', 'auth', 'admin', 'orders', 'audit', 'catalog', 'coupons', 'settlements', 'reports', 'provider', 'banners'],
+    ns: ['common', 'auth', 'admin', 'audit', 'catalog', 'reports', 'provider', 'banners'],
     defaultNS: 'common',
     interpolation: { escapeValue: false },
     detection: {
@@ -47,11 +41,8 @@ void i18n
         common: enCommon,
         auth: enAuth,
         admin: enAdmin,
-        orders: enOrders,
         audit: enAudit,
         catalog: enCatalog,
-        coupons: enCoupons,
-        settlements: enSettlements,
         reports: enReports,
         provider: enProvider,
         banners: enBanners,
@@ -60,11 +51,8 @@ void i18n
         common: arCommon,
         auth: arAuth,
         admin: arAdmin,
-        orders: arOrders,
         audit: arAudit,
         catalog: arCatalog,
-        coupons: arCoupons,
-        settlements: arSettlements,
         reports: arReports,
         provider: arProvider,
         banners: arBanners,

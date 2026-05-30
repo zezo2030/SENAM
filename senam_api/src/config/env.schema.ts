@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, Min, validateSync } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, validateSync } from 'class-validator';
 import { plainToInstance, Type } from 'class-transformer';
 
 export class EnvironmentVariables {
@@ -45,31 +45,6 @@ export class EnvironmentVariables {
   @Type(() => Number)
   @IsNumber()
   OTP_RATE_LIMIT_VERIFY_ATTEMPTS: number = 5;
-
-  @Type(() => Number)
-  @IsNumber()
-  DISPATCH_ATTEMPT_TIMEOUT_MS: number = 300000;
-
-  @Type(() => Number)
-  @IsNumber()
-  DISPATCH_MAX_ATTEMPTS: number = 3;
-
-  @IsString()
-  SETTLEMENT_CRON: string = '0 30 0 * * 0';
-
-  @Type(() => Number)
-  @IsNumber()
-  CARRY_FORWARD_ALERT_THRESHOLD: number = 10000;
-
-  @IsString()
-  MYFATOORAH_API_KEY!: string;
-
-  @Type(() => Boolean)
-  @IsBoolean()
-  MYFATOORAH_SANDBOX: boolean = true;
-
-  @IsString()
-  MYFATOORAH_WEBHOOK_SECRET!: string;
 
   @IsString()
   AWS_SES_REGION: string = 'me-south-1';

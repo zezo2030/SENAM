@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CompanyUserEntity } from './company-user.entity.js';
-import { CompanyUsersService } from './company-users.service.js';
-import { CompanyUsersController } from './company-users.controller.js';
 
+/**
+ * Registers the CompanyUserEntity so other modules (Auth, Admin) can read
+ * the owner login row. Staff management endpoints were removed when SENAM
+ * became a directory-only app.
+ */
 @Module({
   imports: [TypeOrmModule.forFeature([CompanyUserEntity])],
-  controllers: [CompanyUsersController],
-  providers: [CompanyUsersService],
-  exports: [CompanyUsersService],
 })
 export class CompanyUsersModule {}

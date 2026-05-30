@@ -29,6 +29,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             refetchOnWindowFocus: false,
             retry: (failureCount, error) => {
               if (error instanceof ApiError && error.status === 401) return false;
+              if (error instanceof ApiError && error.status === 429) return false;
               return failureCount < 2;
             },
           },

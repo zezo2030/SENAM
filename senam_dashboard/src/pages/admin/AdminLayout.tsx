@@ -4,11 +4,8 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Building2,
-  ShoppingBag,
   Tags,
   Wrench,
-  TicketPercent,
-  Wallet,
   BarChart3,
   ScrollText,
   Image as ImageIcon,
@@ -33,13 +30,10 @@ const NAV: NavItem[] = [
   { to: '/admin/overview', labelKey: 'nav.overview', icon: LayoutDashboard },
   { to: '/admin/companies', labelKey: 'nav.companies', icon: Building2 },
   { to: '/admin/users', labelKey: 'nav.users', icon: Users },
-  { to: '/admin/orders', labelKey: 'nav.orders', icon: ShoppingBag },
   { to: '/admin/catalog/categories', labelKey: 'nav.categories', icon: Tags },
   { to: '/admin/catalog/services', labelKey: 'nav.services', icon: Wrench },
-  { to: '/admin/coupons', labelKey: 'nav.coupons', icon: TicketPercent },
   { to: '/admin/banners', labelKey: 'nav.banners', icon: ImageIcon },
-  { to: '/admin/settlements', labelKey: 'nav.settlements', icon: Wallet },
-  { to: '/admin/reports/sales', labelKey: 'nav.reports', icon: BarChart3 },
+  { to: '/admin/reports/directory', labelKey: 'nav.reports', icon: BarChart3 },
   { to: '/admin/audit', labelKey: 'nav.audit', icon: ScrollText },
 ];
 

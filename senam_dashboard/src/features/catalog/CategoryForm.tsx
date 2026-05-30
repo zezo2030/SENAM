@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { ImageUpload } from '@/components/shared/ImageUpload';
 
 import {
   useCreateCategory,
@@ -28,7 +29,7 @@ const schema = z.object({
   nameAr: z.string().min(1),
   nameEn: z.string().min(1),
   slug: z.string().min(1),
-  iconUrl: z.string().optional(),
+  iconKey: z.string().optional().default(''),
   sortOrder: z.coerce.number().int().min(0).default(0),
   active: z.boolean().default(true),
 });
@@ -38,6 +39,32 @@ interface Props {
   category: Category | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function readIcon(c: Category | null): string {
+  return (
+    (c?.iconKey as string | undefined) ??
+    (c?.icon_key as string | undefined) ??
+    (c?.iconUrl as string | undefined) ??
+    ''
+  );
+}
+
+function readActive(c: Category | null): boolean {
+  if (c?.active !== undefined) return Boolean(c.active);
+  if (c?.isActive !== undefined) return Boolean(c.isActive);
+  if (c?.is_active !== undefined) return Boolean(c.is_active);
+  return true;
+}
+
+function readNameAr(c: Category | null): string {
+  return (c?.nameAr as string | undefined) ?? (c?.name_ar as string | undefined) ?? '';
+}
+function readNameEn(c: Category | null): string {
+  return (c?.nameEn as string | undefined) ?? (c?.name_en as string | undefined) ?? '';
+}
+function readSortOrder(c: Category | null): number {
+  return (c?.sortOrder as number | undefined) ?? (c?.sort_order as number | undefined) ?? 0;
 }
 
 export function CategoryForm({ category, open, onOpenChange }: Props) {
@@ -53,7 +80,7 @@ export function CategoryForm({ category, open, onOpenChange }: Props) {
       nameAr: '',
       nameEn: '',
       slug: '',
-      iconUrl: '',
+      iconKey: '',
       sortOrder: 0,
       active: true,
     },
@@ -62,29 +89,39 @@ export function CategoryForm({ category, open, onOpenChange }: Props) {
   useEffect(() => {
     if (open) {
       form.reset({
-        nameAr: category?.nameAr ?? '',
-        nameEn: category?.nameEn ?? '',
+        nameAr: readNameAr(category),
+        nameEn: readNameEn(category),
         slug: category?.slug ?? '',
-        iconUrl: category?.iconUrl ?? '',
-        sortOrder: category?.sortOrder ?? 0,
-        active: category?.active ?? true,
+        iconKey: readIcon(category),
+        sortOrder: readSortOrder(category),
+        active: readActive(category),
       });
     }
   }, [open, category, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
+    const payload = {
+      nameAr: values.nameAr,
+      nameEn: values.nameEn,
+      slug: values.slug,
+      iconKey: values.iconKey || undefined,
+      sortOrder: values.sortOrder,
+      isActive: values.active,
+    };
     if (isEdit && category) {
-      await update.mutateAsync({ id: category.id, ...values });
+      await update.mutateAsync({ id: category.id, ...payload });
     } else {
-      await create.mutateAsync(values);
+      await create.mutateAsync(payload);
     }
     toast.success(t('saved'));
     onOpenChange(false);
   });
 
+  const iconValue = form.watch('iconKey') ?? '';
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{isEdit ? t('categories.edit') : t('categories.new')}</SheetTitle>
         </SheetHeader>
@@ -110,12 +147,19 @@ export function CategoryForm({ category, open, onOpenChange }: Props) {
             error={form.formState.errors.slug?.message}
             register={form.register('slug')}
           />
-          <Field
-            id="iconUrl"
-            label={t('form.iconUrl')}
-            dir="ltr"
-            register={form.register('iconUrl')}
+
+          <ImageUpload
+            label={t('form.icon')}
+            purpose="category_icon"
+            value={iconValue}
+            onChange={(v) =>
+              form.setValue('iconKey', v, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
           />
+
           <Field
             id="sortOrder"
             label={t('form.sortOrder')}

@@ -6,23 +6,33 @@ import { QK } from '@/lib/query-keys';
 export interface Category {
   id: string;
   nameAr?: string;
+  name_ar?: string;
   nameEn?: string;
+  name_en?: string;
   slug?: string;
+  iconKey?: string;
+  icon_key?: string;
   iconUrl?: string;
   sortOrder?: number;
+  sort_order?: number;
   active?: boolean;
+  isActive?: boolean;
+  is_active?: boolean;
   [key: string]: unknown;
 }
 
 export interface Service {
   id: string;
   categoryId?: string;
+  categoryNameAr?: string;
+  categoryNameEn?: string;
   nameAr?: string;
   nameEn?: string;
   slug?: string;
-  basePriceMinor?: number | string | null;
-  durationMinutes?: number;
+  iconKey?: string;
+  imageKey?: string;
   active?: boolean;
+  isActive?: boolean;
   descriptionAr?: string;
   descriptionEn?: string;
   [key: string]: unknown;

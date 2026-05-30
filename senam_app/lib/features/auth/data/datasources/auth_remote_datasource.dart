@@ -22,6 +22,7 @@ class AuthRemoteDataSource implements AuthDataSource {
     required String password,
   }) async {
     try {
+      await tokenStorage.clearAll();
       final res = await _dio.post<Map<String, dynamic>>(
         '/v1/auth/login',
         data: {
@@ -44,6 +45,7 @@ class AuthRemoteDataSource implements AuthDataSource {
     String? phone,
   }) async {
     try {
+      await tokenStorage.clearAll();
       final body = <String, dynamic>{
         'email': email.trim().toLowerCase(),
         'password': password,
@@ -68,7 +70,9 @@ class AuthRemoteDataSource implements AuthDataSource {
     Map<String, dynamic>? data, {
     required String fallbackEmail,
   }) async {
-    if (data == null) throw const ServerException('استجابة فارغة من الخادم');
+    if (data == null) {
+      throw const ServerException('استجابة فارغة من الخادم');
+    }
     final access = data['accessToken'] as String?;
     final refresh = data['refreshToken'] as String?;
     if (access == null || refresh == null) {

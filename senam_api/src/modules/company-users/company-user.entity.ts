@@ -6,9 +6,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type CompanyUserRole = 'owner' | 'staff';
+export type CompanyUserRole = 'owner';
 export type CompanyUserStatus = 'active' | 'suspended';
 
+/**
+ * Each company has exactly one owner login. Staff role / order metrics
+ * were removed when SENAM became a directory-only app.
+ */
 @Entity('company_users')
 export class CompanyUserEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -23,17 +27,8 @@ export class CompanyUserEntity {
   @Column({ name: 'display_name', type: 'text', nullable: true })
   displayName!: string | null;
 
-  @Column({ type: 'text', default: 'staff' })
+  @Column({ type: 'text', default: 'owner' })
   role!: CompanyUserRole;
-
-  @Column({ name: 'rating_avg', type: 'numeric', default: 0 })
-  ratingAvg!: number;
-
-  @Column({ name: 'rating_count', type: 'int', default: 0 })
-  ratingCount!: number;
-
-  @Column({ name: 'completed_orders_count', type: 'int', default: 0 })
-  completedOrdersCount!: number;
 
   @Column({ type: 'text', default: 'active' })
   status!: CompanyUserStatus;

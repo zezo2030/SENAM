@@ -58,13 +58,13 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
   // ─── Step navigation ───────────────────────────────────────────────────
 
   void goToStep(int step) =>
-      emit(state.copyWith(currentStep: step.clamp(0, 3), clearError: true));
+      emit(state.copyWith(currentStep: step.clamp(0, 2), clearError: true));
 
   void nextStep() =>
-      emit(state.copyWith(currentStep: (state.currentStep + 1).clamp(0, 3)));
+      emit(state.copyWith(currentStep: (state.currentStep + 1).clamp(0, 2)));
 
   void previousStep() =>
-      emit(state.copyWith(currentStep: (state.currentStep - 1).clamp(0, 3)));
+      emit(state.copyWith(currentStep: (state.currentStep - 1).clamp(0, 2)));
 
   // ─── Field setters (step 1) ────────────────────────────────────────────
 
@@ -72,7 +72,13 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
   void setDisplayName(String v) => emit(state.copyWith(displayName: v));
   void setSlug(String v) =>
       emit(state.copyWith(slug: v.trim().toLowerCase()));
-  void setCategoryId(String? id) => emit(state.copyWith(categoryId: id));
+  void setCategoryId(String? id) {
+    if (state.categoryId == id) return;
+    emit(state.copyWith(
+      categoryId: id,
+      selectedServiceIds: const <String>{},
+    ));
+  }
   void setHasCommercialRegistration(bool v) =>
       emit(state.copyWith(hasCommercialRegistration: v));
   void setCommercialRegistrationNo(String v) =>
@@ -281,6 +287,9 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
         if (state.displayName.trim().length < 2) {
           return 'الاسم التجاري المعروض مطلوب';
         }
+        if (!_isValidUuid(state.categoryId)) {
+          return 'يرجى اختيار نوع الخدمة الرئيسي';
+        }
         if (!RegExp(r'^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$')
             .hasMatch(state.slug)) {
           return 'المعرّف (slug) يجب أن يكون أحرف انجليزية وأرقام وشرطات';
@@ -315,12 +324,6 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
         }
         return null;
       case 2:
-        // Optional step.
-        return null;
-      case 3:
-        if (state.subscriptionPlan == null) {
-          return 'اختر الباقة المناسبة';
-        }
         if (!state.documents.containsKey(KycDocumentKind.commercialRegistration) ||
             !state.documents.containsKey(KycDocumentKind.ownerId)) {
           return 'يجب رفع السجل التجاري وهوية المالك';
@@ -345,12 +348,18 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
       clearError: true,
     ));
 
+    final cleanCategoryId = _validUuidOrNull(state.categoryId);
+    final cleanServiceIds = state.selectedServiceIds
+        .map((id) => id.trim())
+        .where(_isValidUuid)
+        .toList();
+
     final draft = CompanyApplicationDraft(
       legalName: state.legalName.trim(),
       displayName: state.displayName.trim(),
       slug: state.slug.trim().toLowerCase(),
       logoObjectKey: state.logoObjectKey,
-      categoryId: state.categoryId,
+      categoryId: cleanCategoryId,
       hasCommercialRegistration: state.hasCommercialRegistration,
       commercialRegistrationNo: state.hasCommercialRegistration
           ? state.commercialRegistrationNo.trim()
@@ -362,7 +371,7 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
       instagram: state.instagram.trim(),
       region: state.region.trim(),
       city: state.city.trim(),
-      serviceIds: state.selectedServiceIds.toList(),
+      serviceIds: cleanServiceIds,
       customServiceText: state.customServiceText.trim(),
       portfolioPhotos: state.portfolioPhotos,
       landline: state.landline.trim(),
@@ -414,6 +423,17 @@ class ProviderApplicationCubit extends Cubit<ProviderApplicationState> {
       )),
     );
   }
+
+  // ─── UUID helpers ──────────────────────────────────────────────────────
+  static final RegExp _uuidRegex = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  static bool _isValidUuid(String? s) =>
+      s != null && _uuidRegex.hasMatch(s.trim());
+
+  static String? _validUuidOrNull(String? s) =>
+      _isValidUuid(s) ? s!.trim() : null;
 
   // ─── Pricing table ─────────────────────────────────────────────────────
   /// السعر المعروض في الـ mockup. مخزّن كـ halalas (1 QAR = 100).

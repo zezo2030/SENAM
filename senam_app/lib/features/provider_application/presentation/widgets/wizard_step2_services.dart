@@ -42,9 +42,17 @@ class WizardStep2Services extends StatelessWidget {
           a.services != b.services ||
           a.selectedServiceIds != b.selectedServiceIds ||
           a.catalogLoading != b.catalogLoading ||
-          a.customServiceText != b.customServiceText,
+          a.customServiceText != b.customServiceText ||
+          a.categoryId != b.categoryId,
       builder: (context, state) {
         final cubit = context.read<ProviderApplicationCubit>();
+
+        final categoryId = state.categoryId;
+        final filteredServices = categoryId == null || categoryId.isEmpty
+            ? state.services
+            : state.services
+                .where((s) => s.categoryId == categoryId)
+                .toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,12 +68,24 @@ class WizardStep2Services extends StatelessWidget {
                   child: CircularProgressIndicator(color: AppColors.gold),
                 ),
               )
-            else if (state.services.isEmpty)
+            else if (categoryId == null || categoryId.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(
                   child: Text(
-                    'لا توجد خدمات متاحة حالياً',
+                    'يرجى اختيار التصنيف في الخطوة السابقة أولاً',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ),
+              )
+            else if (filteredServices.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    'لا توجد خدمات لهذا التصنيف — يمكنك كتابة خدمة أخرى بالأسفل',
+                    textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textMuted),
                   ),
                 ),
@@ -81,9 +101,9 @@ class WizardStep2Services extends StatelessWidget {
                   crossAxisSpacing: 10,
                   childAspectRatio: 0.95,
                 ),
-                itemCount: state.services.length,
+                itemCount: filteredServices.length,
                 itemBuilder: (context, index) {
-                  final svc = state.services[index];
+                  final svc = filteredServices[index];
                   final selected =
                       state.selectedServiceIds.contains(svc.id);
                   return _ServiceTile(

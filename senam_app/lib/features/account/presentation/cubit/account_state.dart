@@ -1,6 +1,6 @@
 part of 'account_cubit.dart';
 
-enum AccountStatus { initial, loading, success, failure }
+enum AccountStatus { initial, loading, success, failure, guest }
 
 class AccountState extends Equatable {
   final AccountStatus status;

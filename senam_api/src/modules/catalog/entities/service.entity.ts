@@ -31,8 +31,14 @@ export class ServiceEntity {
   @Column({ name: 'description_ar', type: 'text', nullable: true })
   descriptionAr!: string | null;
 
-  @Column({ name: 'base_duration_minutes', type: 'int', default: 60 })
-  baseDurationMinutes!: number;
+  @Column({ name: 'description_en', type: 'text', nullable: true })
+  descriptionEn!: string | null;
+
+  @Column({ name: 'icon_key', type: 'text', nullable: true })
+  iconKey!: string | null;
+
+  @Column({ name: 'image_key', type: 'text', nullable: true })
+  imageKey!: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;

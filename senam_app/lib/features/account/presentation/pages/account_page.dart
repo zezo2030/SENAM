@@ -4,6 +4,7 @@ import 'package:senam_app/features/auth/presentation/pages/login_page.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
+import '../../../auth/presentation/pages/register_page.dart';
 import '../../domain/entities/user_profile.dart';
 import '../cubit/account_cubit.dart';
 import 'about_page.dart';
@@ -67,6 +68,11 @@ class AccountView extends StatelessWidget {
             if (state.status == AccountStatus.loading ||
                 state.status == AccountStatus.initial) {
               return const LoadingView();
+            }
+            if (state.status == AccountStatus.guest) {
+              return _GuestCtaView(
+                onAuthSucceeded: () => context.read<AccountCubit>().load(),
+              );
             }
             if (state.status == AccountStatus.failure) {
               return ErrorView(
@@ -429,6 +435,159 @@ class AccountView extends StatelessWidget {
         size: 20,
       ),
       onTap: onTap,
+    );
+  }
+}
+
+/// شاشة CTA تظهر للزائر (بدون حساب) داخل تبويب الحساب —
+/// تتيح له تسجيل الدخول أو إنشاء حساب، أو الاستمرار في التصفّح كضيف.
+class _GuestCtaView extends StatelessWidget {
+  final VoidCallback onAuthSucceeded;
+  const _GuestCtaView({required this.onAuthSucceeded});
+
+  Future<void> _openLogin(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+    onAuthSucceeded();
+  }
+
+  Future<void> _openRegister(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RegisterPage()),
+    );
+    onAuthSucceeded();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: 110,
+            height: 110,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppColors.gold.withValues(alpha: 0.18),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.goldGradient,
+              ),
+              child: const Icon(Icons.person_outline_rounded,
+                  size: 36, color: Color(0xFF1A1500)),
+            ),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'أنت تتصفّح كضيف',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'ElMessiri',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'سجّل الدخول أو أنشئ حساباً للوصول إلى ملفك الشخصي،\nالمحفظة، الكوبونات، وحفظ الطلبات والعناوين.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.7,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 28),
+          ElevatedButton.icon(
+            onPressed: () => _openLogin(context),
+            icon: const Icon(Icons.login_rounded,
+                color: Color(0xFF1A1500), size: 20),
+            label: const Text('تسجيل الدخول'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => _openRegister(context),
+            icon: const Icon(Icons.person_add_alt_1_outlined,
+                color: AppColors.gold, size: 20),
+            label: const Text(
+              'إنشاء حساب جديد',
+              style: TextStyle(
+                  color: AppColors.gold, fontWeight: FontWeight.w700),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.gold),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          const _GuestBenefit(
+            icon: Icons.receipt_long_outlined,
+            text: 'حفظ سجل الطلبات والمتابعة في أي وقت',
+          ),
+          const _GuestBenefit(
+            icon: Icons.local_offer_outlined,
+            text: 'الوصول إلى الكوبونات وعروض الولاء',
+          ),
+          const _GuestBenefit(
+            icon: Icons.location_on_outlined,
+            text: 'حفظ عناوينك المفضّلة لحجز أسرع',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuestBenefit extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _GuestBenefit({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.gold, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,12 +5,10 @@ import '../network/api_client.dart';
 import '../../features/account/di.dart';
 import '../../features/auth/di.dart';
 import '../../features/banners/di.dart';
-import '../../features/booking/di.dart';
 import '../../features/car_rental/di.dart';
 import '../../features/favorites/di.dart';
 import '../../features/home/di.dart';
 import '../../features/offers/di.dart';
-import '../../features/orders/di.dart';
 import '../../features/provider_application/di.dart';
 import '../../features/services/di.dart';
 
@@ -30,8 +28,6 @@ Future<void> initDependencies() async {
   // بقية الميزات
   initAuthDi(sl);
   initHomeDi(sl);
-  initBookingDi(sl);
-  initOrdersDi(sl);
   initFavoritesDi(sl);
   initCarRentalDi(sl);
   initAccountDi(sl);

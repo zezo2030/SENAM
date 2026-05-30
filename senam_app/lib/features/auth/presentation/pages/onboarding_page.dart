@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../app/main_nav.dart';
+import '../../../../core/storage/app_prefs.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../../../provider_application/presentation/pages/provider_application_page.dart';
-import 'login_page.dart';
 
 /// محتوى شاشات التعريف (نص ثابت — جزء من واجهة المستخدم).
 class _OnboardContent {
@@ -41,14 +42,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
         curve: Curves.easeOut,
       );
     } else {
-      _goToLogin();
+      _goToHome();
     }
   }
 
-  void _goToLogin() {
+  Future<void> _goToHome() async {
+    await AppPrefs.setOnboardingSeen();
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+      MaterialPageRoute(builder: (_) => const MainNav()),
     );
   }
 
@@ -69,7 +72,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: _goToLogin,
+                  onPressed: _goToHome,
                   child: const Text('تخطي',
                       style: TextStyle(color: AppColors.textSecondary)),
                 ),
@@ -105,25 +108,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   child: Text(isLast ? 'ابدأ الآن' : 'التالي'),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: TextButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ProviderApplicationPage(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.business_center_outlined,
-                      color: AppColors.gold, size: 18),
-                  label: const Text(
-                    'انضم كشركة (مزوّد خدمة)',
-                    style: TextStyle(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13),
-                  ),
-                ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: isLast
+                    ? Padding(
+                        key: const ValueKey('apply-company-btn'),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: TextButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProviderApplicationPage(),
+                            ),
+                          ),
+                          icon: const Icon(Icons.business_center_outlined,
+                              color: AppColors.gold, size: 18),
+                          label: const Text(
+                            'انضم كشركة (مزوّد خدمة)',
+                            style: TextStyle(
+                                color: AppColors.gold,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13),
+                          ),
+                        ),
+                      )
+                    : const SizedBox(height: 52),
               ),
             ],
           ),

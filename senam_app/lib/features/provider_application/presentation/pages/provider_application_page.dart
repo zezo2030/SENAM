@@ -11,10 +11,9 @@ import '../cubit/provider_application_state.dart';
 import '../widgets/wizard_step1_company.dart';
 import '../widgets/wizard_step2_services.dart';
 import '../widgets/wizard_step3_portfolio.dart';
-import '../widgets/wizard_step4_subscription.dart';
 import 'application_status_page.dart';
 
-/// شاشة "انضمّ كشركة" — wizard من 4 خطوات.
+/// شاشة "انضمّ كشركة" — wizard من 3 خطوات.
 class ProviderApplicationPage extends StatelessWidget {
   const ProviderApplicationPage({super.key});
 
@@ -34,7 +33,6 @@ class _WizardView extends StatelessWidget {
     'معلومات الشركة',
     'الخدمات',
     'الأعمال والصور',
-    'الاشتراك',
   ];
 
   void _showError(BuildContext context, String message) {
@@ -50,7 +48,7 @@ class _WizardView extends StatelessWidget {
       _showError(context, err);
       return;
     }
-    if (cubit.state.currentStep < 3) {
+    if (cubit.state.currentStep < 2) {
       cubit.nextStep();
     } else {
       cubit.submit();
@@ -96,8 +94,7 @@ class _WizardView extends StatelessWidget {
                       child: switch (state.currentStep) {
                         0 => const WizardStep1Company(),
                         1 => const WizardStep2Services(),
-                        2 => const WizardStep3Portfolio(),
-                        _ => const WizardStep4Subscription(),
+                        _ => const WizardStep3Portfolio(),
                       },
                     ),
                   ),
@@ -280,7 +277,7 @@ class _WizardNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLast = currentStep == 3;
+    final isLast = currentStep == 2;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: BoxDecoration(
