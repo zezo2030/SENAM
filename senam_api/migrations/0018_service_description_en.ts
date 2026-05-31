@@ -5,8 +5,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * can persist bilingual descriptions (it already submits `descriptionEn`
  * alongside `descriptionAr`).
  */
-export class ServiceDescriptionEn0018 implements MigrationInterface {
-  name = 'ServiceDescriptionEn0018';
+export class ServiceDescriptionEn1750000000018 implements MigrationInterface {
+  name = 'ServiceDescriptionEn1750000000018';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

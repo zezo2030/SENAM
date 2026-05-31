@@ -6,8 +6,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * `companies.gallery_categories` JSONB (no FK — categories are free-form
  * and owner-managed; NULL means "uncategorized").
  */
-export class CompanyGalleryPhotos0020 implements MigrationInterface {
-  name = 'CompanyGalleryPhotos0020';
+export class CompanyGalleryPhotos1750000000020 implements MigrationInterface {
+  name = 'CompanyGalleryPhotos1750000000020';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Rbac0011 implements MigrationInterface {
-  name = 'Rbac0011';
+export class Rbac1750000000011 implements MigrationInterface {
+  name = 'Rbac1750000000011';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

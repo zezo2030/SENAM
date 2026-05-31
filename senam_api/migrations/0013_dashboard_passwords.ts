@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class DashboardPasswords0013 implements MigrationInterface {
-  name = 'DashboardPasswords0013';
+export class DashboardPasswords1750000000013 implements MigrationInterface {
+  name = 'DashboardPasswords1750000000013';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

@@ -12,8 +12,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *
  * Implemented as additive ALTERs so existing companies keep working.
  */
-export class ProviderApplicationExtensions0016 implements MigrationInterface {
-  name = 'ProviderApplicationExtensions0016';
+export class ProviderApplicationExtensions1750000000016 implements MigrationInterface {
+  name = 'ProviderApplicationExtensions1750000000016';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     // ── companies: extra columns ─────────────────────────────────────────

@@ -14,8 +14,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * multiple reviews for the same company (multi-order legacy), keep the
  * most recent and discard the rest.
  */
-export class DecoupleReviewsFromOrders0021 implements MigrationInterface {
-  name = 'DecoupleReviewsFromOrders0021';
+export class DecoupleReviewsFromOrders1750000000021 implements MigrationInterface {
+  name = 'DecoupleReviewsFromOrders1750000000021';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     // 1) Drop FKs that reference tables we're about to remove (orders, company_users.staff).

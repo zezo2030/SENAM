@@ -9,8 +9,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * marketplace; older migrations (0005–0008, 0012) still exist if anyone
  * needs to bootstrap a fresh marketplace DB for archival purposes.
  */
-export class DropMarketplaceTables0022 implements MigrationInterface {
-  name = 'DropMarketplaceTables0022';
+export class DropMarketplaceTables1750000000022 implements MigrationInterface {
+  name = 'DropMarketplaceTables1750000000022';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     // Drop in FK-safe order: leaves first, roots last.

@@ -13,8 +13,10 @@ COPY package.json package-lock.json ./
 RUN npm ci --include=dev
 
 # Copy source
-COPY tsconfig.json tsconfig.build.json nest-cli.json ./
+COPY tsconfig.json tsconfig.build.json tsconfig.migrations.json nest-cli.json ./
 COPY src/ ./src/
+# tsconfig.migrations.json compiles these into dist/migrations.
+COPY migrations/ ./migrations/
 
 # Compile TypeScript
 RUN npm run build
@@ -57,3 +59,24 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 
 # Run the compiled entry point
 CMD ["node", "dist/main"]
+
+# ─── Stage 3: development (hot reload, used by docker-compose.dev.yml) ─────────
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Native module build deps (bcrypt, pg) — kept in dev image
+RUN apk add --no-cache python3 make g++
+
+COPY package.json package-lock.json ./
+
+# Full install incl. devDependencies (nest CLI, ts-node, typeorm, tsc)
+RUN npm ci --include=dev
+
+# Source is bind-mounted by docker-compose.dev.yml; copy as a fallback so the
+# image is runnable on its own.
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start:dev"]

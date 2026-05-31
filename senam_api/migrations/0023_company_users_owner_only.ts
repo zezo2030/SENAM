@@ -6,8 +6,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * role constraint is narrowed to 'owner'. Order-related metric columns on
  * company_users are dropped since there are no orders.
  */
-export class CompanyUsersOwnerOnly0023 implements MigrationInterface {
-  name = 'CompanyUsersOwnerOnly0023';
+export class CompanyUsersOwnerOnly1750000000023 implements MigrationInterface {
+  name = 'CompanyUsersOwnerOnly1750000000023';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DELETE FROM "company_users" WHERE "role" <> 'owner'`);

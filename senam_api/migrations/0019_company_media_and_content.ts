@@ -8,8 +8,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * - gallery_categories: JSONB array [{ id, ar, en, sortOrder }] — owner-defined
  *                       gallery filter pills (e.g. "مطابخ حديثة", "كلاسيك").
  */
-export class CompanyMediaAndContent0019 implements MigrationInterface {
-  name = 'CompanyMediaAndContent0019';
+export class CompanyMediaAndContent1750000000019 implements MigrationInterface {
+  name = 'CompanyMediaAndContent1750000000019';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

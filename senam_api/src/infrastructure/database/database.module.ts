@@ -14,8 +14,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         logging: config.get<string>('NODE_ENV') !== 'production',
         autoLoadEntities: true,
         migrationsTableName: 'migrations',
+        // SSL is opt-in via DB_SSL (managed cloud DBs), not tied to NODE_ENV:
+        // a self-hosted Postgres (e.g. the bundled compose container) has no SSL.
         ssl:
-          config.get<string>('NODE_ENV') === 'production'
+          config.get<string>('DB_SSL') === 'true'
             ? { rejectUnauthorized: false }
             : false,
       }),

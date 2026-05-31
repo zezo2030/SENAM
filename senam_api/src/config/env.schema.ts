@@ -18,6 +18,10 @@ export class EnvironmentVariables {
   @IsString()
   DATABASE_URL!: string;
 
+  // 'true' enables TLS to Postgres (managed cloud DBs). Off for self-hosted.
+  @IsOptional()
+  DB_SSL?: string | boolean;
+
   @IsOptional()
   @IsString()
   REDIS_URL?: string;

@@ -1,0 +1,89 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# SENAM — DEVELOPMENT override (use together with docker-compose.yml)
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   (or simply: `make up-dev`)
+#
+# Differences from prod:
+#   - api + web run their `development` image stage with hot reload + bind mounts
+#   - both apps are published directly (api:3000, web/vite:5173) — no nginx proxy;
+#     the backend's CORS allow-list already permits http://localhost:5173
+#   - adds MinIO (S3) and Mailhog (email) for local integration
+#   - exposes postgres/redis to the host for local tooling
+# ──────────────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./senam_api
+      target: development
+    environment:
+      NODE_ENV: development
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./senam_api:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./senam_dashboard
+      target: development
+    # The Vite dev server must bind 0.0.0.0 to be reachable from the host.
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_WS_URL: http://localhost:3000
+      VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-en}
+      VITE_DEFAULT_TZ: ${VITE_DEFAULT_TZ:-Asia/Qatar}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./senam_dashboard:/app
+      - /app/node_modules
+    # In dev the SPA talks to the API directly, not through this container.
+    depends_on:
+      - api
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-senam}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-senam_secret}
+    command: server /data --console-address ':9001'
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [senam-net]
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks: [senam-net]
+
+volumes:
+  miniodata:

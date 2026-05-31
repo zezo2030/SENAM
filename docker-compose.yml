@@ -1,0 +1,94 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# SENAM — base / PRODUCTION stack
+#
+#   docker compose up -d                      # prod (this file only)
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up   # dev
+#
+# Use the Makefile targets (`make up`, `make up-dev`, ...) instead of typing
+# these by hand. Copy .env.example -> .env first.
+#
+# Routing: only the `web` (nginx) container is published, on port 80. It serves
+# the dashboard SPA and reverse-proxies /v1, /healthz, /swagger and /socket.io
+# to the `api` service. The `api` container is internal-only (single origin).
+# ──────────────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgis/postgis:15-3.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-senam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-senam}
+      POSTGRES_DB: ${POSTGRES_DB:-senam}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-senam} -d ${POSTGRES_DB:-senam}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [senam-net]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [senam-net]
+
+  api:
+    build:
+      context: ./senam_api
+      target: production
+    image: senam-api:latest
+    restart: unless-stopped
+    # All app env (DATABASE_URL, REDIS_URL, JWT_SECRET, S3_*, ...) comes from .env
+    env_file: .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: "3000"
+    # Run pending migrations, then boot the compiled app.
+    command: sh -c "npm run migration:run && node dist/main"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks: [senam-net]
+
+  web:
+    build:
+      context: ./senam_dashboard
+      target: production
+      args:
+        # Empty base URLs => the SPA calls /v1 and /socket.io on its own origin,
+        # which nginx (this container) reverse-proxies to the api service.
+        VITE_API_BASE_URL: ""
+        VITE_WS_URL: ""
+        VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-en}
+        VITE_DEFAULT_TZ: ${VITE_DEFAULT_TZ:-Asia/Qatar}
+    image: senam-dashboard:latest
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      - api
+    networks: [senam-net]
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  senam-net:
+    driver: bridge

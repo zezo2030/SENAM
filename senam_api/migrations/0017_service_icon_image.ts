@@ -5,8 +5,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * and adds `icon_key` + `image_key` columns so admins can upload an icon and
  * a banner image per service from the dashboard.
  */
-export class ServiceIconImage0017 implements MigrationInterface {
-  name = 'ServiceIconImage0017';
+export class ServiceIconImage1750000000017 implements MigrationInterface {
+  name = 'ServiceIconImage1750000000017';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
