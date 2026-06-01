@@ -1,18 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/main_nav.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../cubit/auth_cubit.dart';
 
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<AuthCubit>(),
+      child: const _RegisterView(),
+    );
+  }
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterView extends StatefulWidget {
+  const _RegisterView();
+
+  @override
+  State<_RegisterView> createState() => _RegisterViewState();
+}
+
+class _RegisterViewState extends State<_RegisterView> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();

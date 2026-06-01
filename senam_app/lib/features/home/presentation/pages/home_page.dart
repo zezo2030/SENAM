@@ -51,8 +51,6 @@ class _HomeView extends StatelessWidget {
               children: [
                 const _TopBar(),
                 const SizedBox(height: 18),
-                const _SearchField(),
-                const SizedBox(height: 16),
                 _HeroBanner(banners: state.banners),
                 const SizedBox(height: 22),
                 const _SectionHeader(
@@ -122,64 +120,6 @@ class _TopBar extends StatelessWidget {
             SizedBox(width: 4),
             Icon(Icons.location_on, color: AppColors.gold, size: 18),
           ],
-        ),
-      ],
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  const _SearchField();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search,
-                    color: AppColors.textMuted, size: 20),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: TextField(
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
-                      hintText: 'ابحث عن خدمة أو شركة...',
-                      hintStyle: TextStyle(
-                          color: AppColors.textMuted, fontSize: 13),
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.tune,
-              color: AppColors.gold, size: 20),
         ),
       ],
     );
